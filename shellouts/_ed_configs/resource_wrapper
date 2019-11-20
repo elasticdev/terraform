@@ -74,10 +74,7 @@ class Main(object):
         convert_to_json= kwargs.get("convert_to_json")
 
         for _output in output:
-            if not _output: continue
-  
-            # revisit if blank line
-            if not _output: continue
+            if not _output.strip(): continue
             results.append(_output)
 
         if not convert_to_json: return results
