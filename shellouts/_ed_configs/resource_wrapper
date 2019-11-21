@@ -33,7 +33,7 @@ class Main(ResourceCmdHelper):
         self.classname = 'TerraformWrapper'
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
-        self.terraform_dir = os.environ.get("TERRAFORM_DIR","/var/tmp/terraform")
+        self.terraform_dir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
 
         _variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
         _variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
