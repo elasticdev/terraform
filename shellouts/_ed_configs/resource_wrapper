@@ -206,9 +206,6 @@ if __name__ == '__main__':
         print "method/ENV VARIABLE METHOD is needed"
         exit(4)
 
-    # Set class and region
-    main.get_region()
-
     if method == "create":
 
         main.check_required_inputargs(keys=["resource_type","os_template_vars"])
