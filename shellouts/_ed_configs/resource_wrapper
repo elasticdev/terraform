@@ -145,7 +145,7 @@ class Main(ResourceCmdHelper):
         for cmd in cmds:
             self.execute(cmd,convert_to_json=False,exit_error=True)
 
-        cmd = [ "terraform apply -auto-accept" ]
+        cmd = [ "terraform apply -auto-approve" ]
         output = self.execute(cmd,convert_to_json=False,exit_error=True).get("output")
 
         os.chdir(self.run_dir)
