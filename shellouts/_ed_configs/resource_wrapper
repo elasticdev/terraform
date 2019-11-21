@@ -33,13 +33,9 @@ class Main(ResourceCmdHelper):
         self.classname = 'TerraformWrapper'
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
-        self.terraform_dir = os.environ.get("TERRAFORM_DIR","/var/tmp/terraform")
 
-        _variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
-        _variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
-
-        self.variables_template = os.path.join(self.terraform_dir,_variables_template)
-        self.variables_file = os.path.join(self.terraform_dir,_variables_file)
+        self.variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
+        self.variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
 
     def _templify(self,**kwargs):
 
@@ -106,18 +102,13 @@ class Main(ResourceCmdHelper):
             self.logger.warn("terraform variables file must exists at {} - something went wrong".format(self.variables_file))
             exit(9)
 
-        if not os.path.exists(self.terraform_dir):
-            self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
-            exit(9)
-
-        cmds = [ "cd {}; terraform init".format(self.terraform_dir) ]
-        # revisit -auto-accept?
-        cmds.append("cd {}; terraform plan -auto-accept".format(self.terraform_dir))
+        cmds = [ "terraform init" ]
+        cmds.append("terraform plan -auto-approve")
 
         for cmd in cmds:
             self.execute(cmd,convert_to_json=False,exit_error=True)
 
-        cmd = [ "cd {}; terraform apply -auto-accept".format(self.terraform_dir) ]
+        cmd = [ "terraform apply -auto-approve" ]
         output = self.execute(cmd,convert_to_json=False,exit_error=True).get("output")
         output = self._format_output(output=output,convert_to_json=True)
 
@@ -135,20 +126,19 @@ class Main(ResourceCmdHelper):
 
     def destroy(self):
 
-        cmds = [ "cd {}; terraform init".format(self.terraform_dir) ]
-        # revisit -auto-accept?
-        cmds.append("cd {}; terraform destroy -auto-accept".format(self.terraform_dir))
+        cmds = [ "terraform init" ]
+        cmds.append("terraform destroy -auto-approve")
 
         for cmd in cmds:
             for retry in range(0,3):
                 results = self.execute(cmd,convert_to_json=None)
                 if results.get("status") is True: break
-                self.logger.debug('having trouble destroying terraform resource at "{}"'.format(self.terraform_dir))
+                self.logger.debug('having trouble destroying terraform resource')
                 sleep(1)
 
             self.successful_output(output=results["output"])
 
-        failed_message = "could not delete terraform resource at {}".format(self.terraform_dir)
+        failed_message = "could not delete terraform resource"
         self.cmd_failed(failed_message=failed_message)
 
 def usage():
@@ -191,7 +181,6 @@ if __name__ == '__main__':
         main.set_inputargs(json_input=json_input)
     else:
         set_env_vars = [ "method",
-                         "terraform_dir",
                          "terraform_template",
                          "terraform_variables_file",
                          "resource_type",
