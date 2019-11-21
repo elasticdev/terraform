@@ -51,16 +51,28 @@ class Main(ResourceCmdHelper):
         # Testingyoyo
         self.logger.debug("a"*32)
         self.logger.debug("a"*32)
+        self.logger.debug("")
         self.logger.debug(clobber)
+        self.logger.debug("")
+        self.logger.debug(os.getcwd())
+        self.logger.debug("")
+        self.logger.debug(self.run_dir)
+        self.logger.debug("")
+        self.logger.debug(self.terraform_dir)
+        self.logger.debug("")
+        
         self.logger.debug("a"*32)
         self.logger.debug("a"*32)
+        os.chdir(self.terraform_dir)
 
         if os.path.exists(self.variables_file) and not clobber:
             self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(self.variables_file))
+            os.chdir(self.pwd)
             return
 
         if os.path.exists(self.variables_template) and not clobber:
             self.logger.warn("terraform variables template does not exists at {} - skipping templifying of it".format(self.variables_template))
+            os.chdir(self.pwd)
             return
 
         templateVars = {}
@@ -77,6 +89,8 @@ class Main(ResourceCmdHelper):
         writefile = open(self.variables_file,"wb")
         writefile.write(outputText)
         writefile.close()
+
+        os.chdir(self.pwd)
    
     def _format_output(self,**kwargs):
 
@@ -112,6 +126,8 @@ class Main(ResourceCmdHelper):
 
         self._templify(**self.inputargs)
 
+        os.chdir(self.terraform_dir)
+
         if not os.path.exists(self.variables_file):
             self.logger.warn("terraform variables file must exists at {} - something went wrong".format(self.variables_file))
             exit(9)
@@ -119,6 +135,8 @@ class Main(ResourceCmdHelper):
         if not os.path.exists(self.terraform_dir):
             self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
             exit(9)
+
+        os.chdir(self.terraform_dir)
 
         cmds = [ "cd {}; terraform init".format(self.terraform_dir) ]
         # revisit -auto-accept?
