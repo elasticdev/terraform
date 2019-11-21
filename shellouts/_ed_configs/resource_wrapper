@@ -130,22 +130,23 @@ class Main(ResourceCmdHelper):
 
         if not os.path.exists(self.variables_file):
             self.logger.warn("terraform variables file must exists at {} - something went wrong".format(self.variables_file))
+            os.chdir(self.pwd)
             exit(9)
 
         if not os.path.exists(self.terraform_dir):
             self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
+            os.chdir(self.pwd)
             exit(9)
 
         os.chdir(self.terraform_dir)
 
-        cmds = [ "cd {}; terraform init".format(self.terraform_dir) ]
-        # revisit -auto-accept?
-        cmds.append("cd {}; terraform plan".format(self.terraform_dir))
+        cmds = [ "terraform init" ]
+        cmds.append("terraform plan")
 
         for cmd in cmds:
             self.execute(cmd,convert_to_json=False,exit_error=True)
 
-        cmd = [ "cd {}; terraform apply -auto-accept".format(self.terraform_dir) ]
+        cmd = [ "terraform apply -auto-accept" ]
         output = self.execute(cmd,convert_to_json=False,exit_error=True).get("output")
         output = self._format_output(output=output,convert_to_json=True)
 
@@ -159,13 +160,16 @@ class Main(ResourceCmdHelper):
         resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
         resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
 
+        os.chdir(self.pwd)
+
         self.successful_output(output=resource)
 
     def destroy(self):
 
-        cmds = [ "cd {}; terraform init".format(self.terraform_dir) ]
-        # revisit -auto-accept?
-        cmds.append("cd {}; terraform destroy -auto-accept".format(self.terraform_dir))
+        os.chdir(self.terraform_dir)
+
+        cmds = [ "terraform init" ]
+        cmds.append("terraform destroy -auto-approve")
 
         for cmd in cmds:
             for retry in range(0,3):
@@ -175,6 +179,8 @@ class Main(ResourceCmdHelper):
                 sleep(1)
 
             self.successful_output(output=results["output"])
+
+        os.chdir(self.pwd)
 
         failed_message = "could not delete terraform resource at {}".format(self.terraform_dir)
         self.cmd_failed(failed_message=failed_message)
