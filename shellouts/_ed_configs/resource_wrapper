@@ -49,22 +49,6 @@ class Main(ResourceCmdHelper):
         variables_file_path = os.path.join(self.terraform_dir,self.variables_file)
         variables_template_path = os.path.join(self.terraform_dir,self.variables_template)
 
-        # Testingyoyo
-        self.logger.debug("a"*32)
-        self.logger.debug("a"*32)
-        self.logger.debug("")
-        self.logger.debug(clobber)
-        self.logger.debug("")
-        self.logger.debug(os.getcwd())
-        self.logger.debug("")
-        self.logger.debug(self.run_dir)
-        self.logger.debug("")
-        self.logger.debug(self.terraform_dir)
-        self.logger.debug("")
-        
-        self.logger.debug("a"*32)
-        self.logger.debug("a"*32)
-
         if os.path.exists(variables_file_path) and not clobber:
             self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(variables_file_path))
             return
@@ -75,14 +59,6 @@ class Main(ResourceCmdHelper):
             exit(9)
             return
 
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
         self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
 
         templateVars = {}
