@@ -36,8 +36,8 @@ class Main(object):
         _variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
         _variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
 
-        self.variables_template = os.path.join(_variables_template,self.variables_template)
-        self.variables_file = os.path.join(_variables_file,self.variables_file)
+        self.variables_template = os.path.join(self.terraform_dir,_variables_template)
+        self.variables_file = os.path.join(self.terraform_dir,_variables_file)
 
     def _templify(self,**kwargs):
 
