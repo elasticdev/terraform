@@ -83,9 +83,9 @@ class Main(ResourceCmdHelper):
 
         templateLoader = jinja2.FileSystemLoader(searchpath="/")
         templateEnv = jinja2.Environment(loader=templateLoader)
-        template = templateEnv.get_template(self.variables_template)
+        template = templateEnv.get_template(os.path.join(self.run_dir,self.variables_template))
         outputText = template.render( templateVars )
-        writefile = open(self.variables_file,"wb")
+        writefile = open(os.path.join(self.run_dir,self.variables_file),"wb")
         writefile.write(outputText)
         writefile.close()
 
