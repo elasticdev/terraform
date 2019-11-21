@@ -56,7 +56,7 @@ class Main(ResourceCmdHelper):
         templateVars = {}
 
         for _var in os.environ["OS_TEMPLATE_VARS"].split(","):
-            var = _var.strip.upper()
+            var = _var.strip().upper()
             if not os.environ.get(var): continue
             templateVars[var] = os.environ[var]
 
