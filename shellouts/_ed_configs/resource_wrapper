@@ -107,6 +107,20 @@ class Main(ResourceCmdHelper):
  
         return resource
 
+    def return_resource(self,output):
+
+        output = self._format_output(output=output,convert_to_json=True)
+
+        resource = output
+        resource["resource_type"] = os.environ["RESOURCE_TYPE"]
+        resource["method"] = "terraform"
+        #resource["provider"] = "terraform"
+        self._add_tags(resource)
+        if not resource.get("_id"): resource["_id"] = output["id"]
+
+        resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
+        resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
+
     def create(self):
 
         self._templify(**self.inputargs)
@@ -133,21 +147,11 @@ class Main(ResourceCmdHelper):
 
         cmd = [ "terraform apply -auto-accept" ]
         output = self.execute(cmd,convert_to_json=False,exit_error=True).get("output")
-        output = self._format_output(output=output,convert_to_json=True)
-
-        resource = output
-        resource["resource_type"] = os.environ["RESOURCE_TYPE"]
-        resource["method"] = "terraform"
-        #resource["provider"] = "terraform"
-        self._add_tags(resource)
-        if not resource.get("_id"): resource["_id"] = output["id"]
-
-        resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
-        resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
 
         os.chdir(self.run_dir)
+        #resource = self.return_resource(output)
 
-        self.successful_output(output=resource)
+        #self.successful_output(output=resource)
 
     def destroy(self):
 
