@@ -69,7 +69,7 @@ class Main(ResourceCmdHelper):
             self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(variables_file_path))
             return
 
-        if os.path.exists(variables_template_path):
+        if not os.path.exists(variables_template_path):
             self.logger.error("terraform variables template does not exists at {} - skipping templifying of it".format(variables_template_path))
             os.chdir(self.run_dir)
             exit(9)
