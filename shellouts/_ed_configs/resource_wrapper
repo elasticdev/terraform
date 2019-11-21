@@ -23,11 +23,13 @@ import jinja2
 from time import sleep
 
 from ed_helper_publisher.loggerly import ElasticDevLogger
+from ed_helper_publisher.resource_manage import ResourceCmdHelper
 
-class Main(object):
+class Main(ResourceCmdHelper):
 
     def __init__(self,**kwargs):
 
+        ResourceCmdHelper.__init__(self)
         self.classname = 'TerraformWrapper'
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
