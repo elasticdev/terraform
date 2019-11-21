@@ -112,7 +112,7 @@ class Main(ResourceCmdHelper):
 
         cmds = [ "cd {}; terraform init".format(self.terraform_dir) ]
         # revisit -auto-accept?
-        cmds.append("cd {}; terraform plan -auto-accept".format(self.terraform_dir))
+        cmds.append("cd {}; terraform plan".format(self.terraform_dir))
 
         for cmd in cmds:
             self.execute(cmd,convert_to_json=False,exit_error=True)
