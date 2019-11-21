@@ -38,8 +38,7 @@ class Main(ResourceCmdHelper):
         self.variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
         self.variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
 
-        self.pwd = os.getcwd()
-        self.run_dir = os.path.join(os.getcwd(),"_chrootfiles")
+        self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,_terraform_dir)
         #self.variables_template = os.path.join(self.terraform_dir,_variables_template)
         #self.variables_file = os.path.join(self.terraform_dir,_variables_file)
@@ -67,12 +66,12 @@ class Main(ResourceCmdHelper):
 
         if os.path.exists(self.variables_file) and not clobber:
             self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(self.variables_file))
-            os.chdir(self.pwd)
+            os.chdir(self.run_dir)
             return
 
         if os.path.exists(self.variables_template) and not clobber:
             self.logger.warn("terraform variables template does not exists at {} - skipping templifying of it".format(self.variables_template))
-            os.chdir(self.pwd)
+            os.chdir(self.run_dir)
             return
 
         templateVars = {}
@@ -90,7 +89,7 @@ class Main(ResourceCmdHelper):
         writefile.write(outputText)
         writefile.close()
 
-        os.chdir(self.pwd)
+        os.chdir(self.run_dir)
    
     def _format_output(self,**kwargs):
 
@@ -130,12 +129,12 @@ class Main(ResourceCmdHelper):
 
         if not os.path.exists(self.variables_file):
             self.logger.warn("terraform variables file must exists at {} - something went wrong".format(self.variables_file))
-            os.chdir(self.pwd)
+            os.chdir(self.run_dir)
             exit(9)
 
         if not os.path.exists(self.terraform_dir):
             self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
-            os.chdir(self.pwd)
+            os.chdir(self.run_dir)
             exit(9)
 
         os.chdir(self.terraform_dir)
@@ -160,7 +159,7 @@ class Main(ResourceCmdHelper):
         resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
         resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
 
-        os.chdir(self.pwd)
+        os.chdir(self.run_dir)
 
         self.successful_output(output=resource)
 
@@ -180,7 +179,7 @@ class Main(ResourceCmdHelper):
 
             self.successful_output(output=results["output"])
 
-        os.chdir(self.pwd)
+        os.chdir(self.run_dir)
 
         failed_message = "could not delete terraform resource at {}".format(self.terraform_dir)
         self.cmd_failed(failed_message=failed_message)
