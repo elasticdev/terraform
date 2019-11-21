@@ -107,9 +107,16 @@ class Main(ResourceCmdHelper):
  
         return resource
 
+    def _get_state_info(self):
+
+        # if filter file exists, then we execute 
+        pass
+
+        # if filter file does not exist, we grab the raw info
+
     def return_resource(self,output):
 
-        output = self._format_output(output=output,convert_to_json=True)
+        #output = self._format_output(output=output,convert_to_json=True)
 
         resource = output
         resource["resource_type"] = os.environ["RESOURCE_TYPE"]
