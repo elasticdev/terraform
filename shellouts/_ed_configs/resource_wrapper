@@ -117,8 +117,18 @@ class Main(ResourceCmdHelper):
     def return_resource(self,output):
 
         #output = self._format_output(output=output,convert_to_json=True)
+        try:
+            resource = json.loads(output)
+        except:
+            resource = None
 
-        resource = output
+        if not resource or not isinstance(output,dict):
+            resource = {}
+            resource["raw"] = {}
+            resource["raw"]["output"] = output
+        else:
+            resource = output
+            
         resource["resource_type"] = os.environ["RESOURCE_TYPE"]
         resource["method"] = "terraform"
         #resource["provider"] = "terraform"
@@ -156,9 +166,9 @@ class Main(ResourceCmdHelper):
         output = self.execute(cmd,convert_to_json=False,exit_error=True).get("output")
 
         os.chdir(self.run_dir)
-        #resource = self.return_resource(output)
+        resource = self.return_resource(output)
 
-        #self.successful_output(output=resource)
+        self.successful_output(output=resource)
 
     def destroy(self):
 
