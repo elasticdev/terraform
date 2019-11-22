@@ -133,7 +133,11 @@ class Main(ResourceCmdHelper):
         resource["method"] = "terraform"
         #resource["provider"] = "terraform"
         self._add_tags(resource)
-        if not resource.get("_id"): resource["_id"] = output["id"]
+
+        if not resource.get("_id") and isinstance(output,dict): 
+            resource["_id"] = output["id"]
+        #else:
+        #    resource["_id"] = self.get_hash(name)
 
         resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
         resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
