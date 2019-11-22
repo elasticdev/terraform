@@ -136,6 +136,8 @@ class Main(ResourceCmdHelper):
 
         if not resource.get("_id") and isinstance(output,dict): 
             resource["_id"] = output["id"]
+
+
         #else:
         #    resource["_id"] = self.get_hash(name)
 
