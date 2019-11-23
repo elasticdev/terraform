@@ -135,6 +135,19 @@ class Main(ResourceCmdHelper):
 
         resource = self._get_state_info()
 
+        print 'z1'*32
+        print 'z1'*32
+        print 'z1'*32
+        print ''
+        print ''
+        print resource
+        print ''
+        print ''
+        print 'z2'*32
+        print 'z2'*32
+        print 'z2'*32
+        print 'z2'*32
+
         if not isinstance(resource,dict): 
             self.logger.warn("resource needs to be a dictionary!")
             exit(9)
