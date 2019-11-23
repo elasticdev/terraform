@@ -85,13 +85,13 @@ class Main(ResourceCmdHelper):
         results = []
 
         output = kwargs["output"]
-        convert_to_json= kwargs.get("convert_to_json")
+        output_to_json= kwargs.get("output_to_json")
 
         for _output in output:
             if not _output.strip(): continue
             results.append(_output)
 
-        if not convert_to_json: return results
+        if not output_to_json: return results
 
         return json.loads(results)
 
@@ -114,7 +114,7 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         cmd = [ "./{}".format(self.terraform_parse_state_file) ]
-        output = self.execute(cmd,convert_to_json=True,exit_error=True).get("output")
+        output = self.execute(cmd,output_to_json=True,exit_error=True).get("output")
         os.chdir(self.run_dir)
 
         return output
@@ -159,7 +159,7 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         for cmd in cmds:
-            self.execute(cmd,convert_to_json=False,exit_error=True)
+            self.execute(cmd,output_to_json=False,exit_error=True)
 
         resource = self.get_resource_info()
         self.logger.debug('h1'*32)
@@ -181,7 +181,7 @@ class Main(ResourceCmdHelper):
 
         for cmd in cmds:
             for retry in range(0,3):
-                results = self.execute(cmd,convert_to_json=None)
+                results = self.execute(cmd,output_to_json=None)
                 if results.get("status") is True: break
                 self.logger.debug('having trouble destroying terraform resource at "{}"'.format(self.terraform_dir))
                 sleep(1)
