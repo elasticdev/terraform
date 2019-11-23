@@ -37,20 +37,23 @@ class Main(ResourceCmdHelper):
         _terraform_dir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
         self.variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
         self.variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
+        self.terraform_parse_state_file = os.environ.get("TERRAFORM_PARSE_STATE","terraform_parse_state")
 
         self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,_terraform_dir)
+
+        self.variables_file_path = os.path.join(self.terraform_dir,self.variables_file)
+        self.terraform_parse_state_path = os.path.join(self.terraform_dir,self.terraform_parse_state_file)
         #self.variables_template = os.path.join(self.terraform_dir,_variables_template)
         #self.variables_file = os.path.join(self.terraform_dir,_variables_file)
 
     def _templify(self,**kwargs):
 
         clobber = kwargs.get("clobber")
-        variables_file_path = os.path.join(self.terraform_dir,self.variables_file)
         variables_template_path = os.path.join(self.terraform_dir,self.variables_template)
 
-        if os.path.exists(variables_file_path) and not clobber:
-            self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(variables_file_path))
+        if os.path.exists(self.variables_file_path) and not clobber:
+            self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(self.variables_file_path))
             return
 
         if not os.path.exists(variables_template_path):
@@ -59,7 +62,7 @@ class Main(ResourceCmdHelper):
             exit(9)
             return
 
-        self.logger.debug("creating terraform variables file {} from {}".format(variables_file_path,variables_template_path))
+        self.logger.debug("creating terraform variables file {} from {}".format(self.variables_file_path,variables_template_path))
 
         templateVars = {}
 
@@ -73,7 +76,7 @@ class Main(ResourceCmdHelper):
         templateEnv = jinja2.Environment(loader=templateLoader)
         template = templateEnv.get_template(variables_template_path)
         outputText = template.render( templateVars )
-        writefile = open(variables_file_path,"wb")
+        writefile = open(self.variables_file_path,"wb")
         writefile.write(outputText)
         writefile.close()
    
@@ -109,49 +112,35 @@ class Main(ResourceCmdHelper):
 
     def _get_state_info(self):
 
-        # if filter file exists, then we execute 
-        pass
+        os.chdir(self.terraform_dir)
+        cmd = [ "./terraform_parse_state" ]
+        output = self.execute(cmd,convert_to_json=True,exit_error=True).get("output")
+        os.chdir(self.run_dir)
 
-        # if filter file does not exist, we grab the raw info
+        return output
 
-    def return_resource(self,output):
+    def get_resource_info(self):
 
-        #output = self._format_output(output=output,convert_to_json=True)
-        try:
-            resource = json.loads(output)
-        except:
-            resource = None
+        resource = self._get_state_info()
+        if not isinstance(resource,dict): resource = json.loads(resource)
 
-        if not resource or not isinstance(output,dict):
-            resource = {}
-            resource["raw"] = {}
-            resource["raw"]["output"] = output
-        else:
-            resource = output
-            
-        resource["resource_type"] = os.environ["RESOURCE_TYPE"]
         resource["method"] = "terraform"
-        #resource["provider"] = "terraform"
         self._add_tags(resource)
 
-        if not resource.get("_id") and isinstance(output,dict): 
-            resource["_id"] = output["id"]
-
-
-        #else:
-        #    resource["_id"] = self.get_hash(name)
+        if not resource.get("_id") and isinstance(resource,dict): 
+            resource["_id"] = resource["id"]
 
         resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
         resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
+
+        return resource
 
     def create(self):
 
         self._templify(**self.inputargs)
 
-        variables_file_path = os.path.join(self.terraform_dir,self.variables_file)
-
-        if not os.path.exists(variables_file_path):
-            self.logger.warn("terraform variables file must exists at {} - something went wrong".format(variables_file_path))
+        if not os.path.exists(self.variables_file_path):
+            self.logger.warn("terraform variables file must exists at {} - something went wrong".format(self.variables_file_path))
             os.chdir(self.run_dir)
             exit(9)
 
@@ -160,20 +149,19 @@ class Main(ResourceCmdHelper):
             os.chdir(self.run_dir)
             exit(9)
 
-        os.chdir(self.terraform_dir)
+        if not os.path.exists(self.terraform_parse_state_path):
+            self.logger.warn("script to parse terraform must exists here {}".format(self.terraform_parse_state_path))
+            exit(9)
 
         cmds = [ "terraform init" ]
         cmds.append("terraform plan")
+        cmds.append("terraform apply -auto-approve")
 
+        os.chdir(self.terraform_dir)
         for cmd in cmds:
             self.execute(cmd,convert_to_json=False,exit_error=True)
 
-        cmd = [ "terraform apply -auto-approve" ]
-        output = self.execute(cmd,convert_to_json=False,exit_error=True).get("output")
-
-        os.chdir(self.run_dir)
-        resource = self.return_resource(output)
-
+        resource = self.get_resource_info()
         self.successful_output(output=resource)
 
     def destroy(self):
