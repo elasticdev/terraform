@@ -24,6 +24,7 @@ from time import sleep
 
 from ed_helper_publisher.loggerly import ElasticDevLogger
 from ed_helper_publisher.resource_manage import ResourceCmdHelper
+from ed_helper_publisher.output import convert_ed_output_to_values
 
 class Main(ResourceCmdHelper):
 
@@ -114,13 +115,13 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         cmd = [ "./{}".format(self.print_ed_output) ]
-        self.logger.debug("i0"*32)
-        self.logger.debug("i0"*32)
-        self.logger.debug("i0"*32)
-        self.logger.debug("i0"*32)
         output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
+        values = convert_ed_output_to_values(output)
+        self.logger.debug("i0"*32)
+        self.logger.debug("i0"*32)
+        self.logger.debug("i0"*32)
         self.logger.debug('')
-        self.logger.debug(output)
+        self.logger.debug(values)
         self.logger.debug('')
         self.logger.debug("i1"*32)
         self.logger.debug("i1"*32)
@@ -128,22 +129,15 @@ class Main(ResourceCmdHelper):
         self.logger.debug("i1"*32)
         os.chdir(self.run_dir)
 
-        return output
+        return values
 
     def get_resource_info(self):
 
         resource = self._get_state_info()
 
         if not isinstance(resource,dict): 
-            self.logger.debug("i2"*32)
-            try:
-                resource = json.loads(resource)
-            except:
-                self.logger.error("Could not convert json load")
-            self.logger.debug("i2"*32)
-            self.logger.debug("i2"*32)
-            self.logger.debug("i2"*32)
-            self.logger.debug("i2"*32)
+            self.logger.warn("resource needs to be a dictionary!")
+            exit(9)
 
         resource["method"] = "terraform"
         self._add_tags(resource)
