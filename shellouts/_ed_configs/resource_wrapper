@@ -37,13 +37,13 @@ class Main(ResourceCmdHelper):
         _terraform_dir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
         self.variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
         self.variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
-        self.terraform_parse_state_file = os.environ.get("TERRAFORM_PARSE_STATE","terraform_parse_state")
+        self.print_ed_output = os.environ.get("TERRAFORM_PARSE_STATE","print_ed_output")
 
         self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,_terraform_dir)
 
         self.variables_file_path = os.path.join(self.terraform_dir,self.variables_file)
-        self.terraform_parse_state_path = os.path.join(self.terraform_dir,self.terraform_parse_state_file)
+        self.print_ed_output_path = os.path.join(self.terraform_dir,self.print_ed_output)
         #self.variables_template = os.path.join(self.terraform_dir,_variables_template)
         #self.variables_file = os.path.join(self.terraform_dir,_variables_file)
 
@@ -113,7 +113,7 @@ class Main(ResourceCmdHelper):
     def _get_state_info(self):
 
         os.chdir(self.terraform_dir)
-        cmd = [ "./{}".format(self.terraform_parse_state_file) ]
+        cmd = [ "./{}".format(self.print_ed_output) ]
         self.logger.debug("i0"*32)
         self.logger.debug("i0"*32)
         self.logger.debug("i0"*32)
@@ -163,8 +163,8 @@ class Main(ResourceCmdHelper):
             os.chdir(self.run_dir)
             exit(9)
 
-        if not os.path.exists(self.terraform_parse_state_path):
-            self.logger.warn("script to parse terraform must exists here {}".format(self.terraform_parse_state_path))
+        if not os.path.exists(self.print_ed_output_path):
+            self.logger.warn("script to parse terraform must exists here {}".format(self.print_ed_output_path))
             exit(9)
 
         cmds = [ "terraform init" ]
