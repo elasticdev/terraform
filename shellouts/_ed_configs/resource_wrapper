@@ -133,12 +133,11 @@ class Main(ResourceCmdHelper):
 
     def get_resource_info(self):
 
-        resource = self._get_state_info()
-
         print 'z1'*32
         print 'z1'*32
         print 'z1'*32
         print ''
+        resource = self._get_state_info()
         print ''
         print resource
         print ''
@@ -147,6 +146,7 @@ class Main(ResourceCmdHelper):
         print 'z2'*32
         print 'z2'*32
         print 'z2'*32
+        exit(4)
 
         if not isinstance(resource,dict): 
             self.logger.warn("resource needs to be a dictionary!")
