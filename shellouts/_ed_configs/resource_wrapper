@@ -119,6 +119,13 @@ class Main(ResourceCmdHelper):
         self.logger.debug("i0"*32)
         self.logger.debug("i0"*32)
         output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
+        self.logger.debug('')
+        self.logger.debug(output)
+        self.logger.debug('')
+        self.logger.debug("i1"*32)
+        self.logger.debug("i1"*32)
+        self.logger.debug("i1"*32)
+        self.logger.debug("i1"*32)
         os.chdir(self.run_dir)
 
         return output
@@ -128,11 +135,11 @@ class Main(ResourceCmdHelper):
         resource = self._get_state_info()
 
         if not isinstance(resource,dict): 
-            self.logger.debug("i1"*32)
-            self.logger.debug("i1"*32)
-            self.logger.debug("i1"*32)
-            self.logger.debug("i1"*32)
-            resource = json.loads(resource)
+            self.logger.debug("i2"*32)
+            try:
+                resource = json.loads(resource)
+            except:
+                self.logger.error("Could not convert json load")
             self.logger.debug("i2"*32)
             self.logger.debug("i2"*32)
             self.logger.debug("i2"*32)
