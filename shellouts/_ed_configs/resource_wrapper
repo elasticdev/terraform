@@ -114,7 +114,14 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         cmd = [ "./terraform_parse_state" ]
+
+        self.logger.debug('5a'*32)
+        self.logger.debug('5a'*32)
+        self.logger.debug('5a'*32)
         output = self.execute(cmd,convert_to_json=True,exit_error=True).get("output")
+        self.logger.debug('5b'*32)
+        self.logger.debug('5b'*32)
+        self.logger.debug('5b'*32)
         os.chdir(self.run_dir)
 
         return output
