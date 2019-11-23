@@ -113,20 +113,8 @@ class Main(ResourceCmdHelper):
     def _get_state_info(self):
 
         os.chdir(self.terraform_dir)
-        cmd = [ "./terraform_parse_state" ]
-
-        self.logger.debug('5a'*32)
-        self.logger.debug('5a'*32)
-        self.logger.debug('5a'*32)
+        cmd = [ "./{}".format(self.terraform_parse_state_file) ]
         output = self.execute(cmd,convert_to_json=True,exit_error=True).get("output")
-        self.logger.debug('')
-        self.logger.debug(output)
-        self.logger.debug('')
-        self.logger.debug(type(output))
-        self.logger.debug('')
-        self.logger.debug('5b'*32)
-        self.logger.debug('5b'*32)
-        self.logger.debug('6b'*32)
         os.chdir(self.run_dir)
 
         return output
@@ -176,7 +164,6 @@ class Main(ResourceCmdHelper):
         resource = self.get_resource_info()
         self.logger.debug('h1'*32)
         self.logger.debug('h1'*32)
-        print resource
         self.logger.debug('h1'*32)
         self.logger.debug(type(resource))
         self.logger.debug('h1'*32)
