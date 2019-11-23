@@ -1,0 +1,25 @@
+*.py[co]
+*.pyc
+
+*.swo
+*.swl
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+*.mo
+
+import_files
+
+*.~*
+
+*.swn
+*.swm
+*.swp
+
+*.pyc
+*.swk
+
+.ropeproject
