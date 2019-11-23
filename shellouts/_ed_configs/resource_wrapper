@@ -122,11 +122,12 @@ class Main(ResourceCmdHelper):
         self.logger.debug('')
         self.logger.debug(output)
         self.logger.debug('')
+        self.logger.debug(type(output))
+        self.logger.debug('')
         self.logger.debug('5b'*32)
         self.logger.debug('5b'*32)
         self.logger.debug('6b'*32)
         os.chdir(self.run_dir)
-        exit(9)
 
         return output
 
@@ -173,7 +174,17 @@ class Main(ResourceCmdHelper):
             self.execute(cmd,convert_to_json=False,exit_error=True)
 
         resource = self.get_resource_info()
+        self.logger.debug('h1'*32)
+        self.logger.debug('h1'*32)
+        self.logger.debug('h1'*32)
+        self.logger.debug('h1'*32)
+        exit(0)
         self.successful_output(output=resource)
+        self.logger.debug('h2'*32)
+        self.logger.debug('h2'*32)
+        self.logger.debug('h2'*32)
+        self.logger.debug('h2'*32)
+        exit(0)
 
     def destroy(self):
 
