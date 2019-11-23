@@ -114,7 +114,7 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         cmd = [ "./{}".format(self.terraform_parse_state_file) ]
-        output = self.execute(cmd,output_to_json=True,exit_error=True).get("output")
+        output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
         os.chdir(self.run_dir)
 
         return output
@@ -122,7 +122,16 @@ class Main(ResourceCmdHelper):
     def get_resource_info(self):
 
         resource = self._get_state_info()
-        if not isinstance(resource,dict): resource = json.loads(resource)
+        if not isinstance(resource,dict): 
+            self.logger.debug("i1"*32)
+            self.logger.debug("i1"*32)
+            self.logger.debug("i1"*32)
+            self.logger.debug("i1"*32)
+            resource = json.loads(resource)
+            self.logger.debug("i2"*32)
+            self.logger.debug("i2"*32)
+            self.logger.debug("i2"*32)
+            self.logger.debug("i2"*32)
 
         resource["method"] = "terraform"
         self._add_tags(resource)
