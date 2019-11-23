@@ -128,8 +128,9 @@ class Main(ResourceCmdHelper):
         print 'z2'*32
         print resource
         print 'z2'*32
+        print type(resource)
         print 'z2'*32
-        exit(4)
+        print 'z2'*32
 
         if not isinstance(resource,dict): 
             self.logger.warn("resource needs to be a dictionary!")
