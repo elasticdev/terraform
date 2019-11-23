@@ -117,33 +117,16 @@ class Main(ResourceCmdHelper):
         cmd = [ "./{}".format(self.print_ed_output) ]
         output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
         values = convert_ed_output_to_values(output)
-        self.logger.debug("i0"*32)
-        self.logger.debug("i0"*32)
-        self.logger.debug("i0"*32)
-        self.logger.debug('')
-        self.logger.debug(values)
-        self.logger.debug('')
-        self.logger.debug("i1"*32)
-        self.logger.debug("i1"*32)
-        self.logger.debug("i1"*32)
-        self.logger.debug("i1"*32)
         os.chdir(self.run_dir)
 
         return values
 
     def get_resource_info(self):
 
-        print 'z1'*32
-        print 'z1'*32
-        print 'z1'*32
-        print ''
         resource = self._get_state_info()
-        print ''
+        print 'z2'*32
+        print 'z2'*32
         print resource
-        print ''
-        print ''
-        print 'z2'*32
-        print 'z2'*32
         print 'z2'*32
         print 'z2'*32
         exit(4)
