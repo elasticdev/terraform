@@ -101,7 +101,7 @@ class Main(ResourceCmdHelper):
         if not tags: return
 
         tags = [ tag.strip() for tag in tags.split(",") ]
-        if not resource.get("tags"): resource["tags"] = []
+        if not isinstance(resource.get("tags"),list): resource["tags"] = []
         resource["tags"].extend(tags)
         resource["tags"].append("terraform")
 
