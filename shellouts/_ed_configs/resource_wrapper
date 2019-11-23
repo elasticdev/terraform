@@ -184,6 +184,7 @@ class Main(ResourceCmdHelper):
         self.logger.debug(type(resource))
         self.logger.debug('h2'*32)
         self.logger.debug('h2'*32)
+        exit(7)
         self.successful_output(output=resource)
         self.logger.debug('h3'*32)
         self.logger.debug('h3'*32)
