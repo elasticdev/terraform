@@ -124,19 +124,14 @@ class Main(ResourceCmdHelper):
     def get_resource_info(self):
 
         resource = self._get_state_info()
-        print 'z2'*32
-        print 'z2'*32
-        print resource
-        print 'z2'*32
-        print type(resource)
-        print 'z2'*32
-        print 'z2'*32
 
         if not isinstance(resource,dict): 
             self.logger.warn("resource needs to be a dictionary!")
             exit(9)
 
         resource["method"] = "terraform"
+        resource["stateful_dir"] = self.terraform_dir
+
         self._add_tags(resource)
 
         if not resource.get("_id") and isinstance(resource,dict): 
@@ -173,22 +168,9 @@ class Main(ResourceCmdHelper):
         for cmd in cmds:
             self.execute(cmd,output_to_json=False,exit_error=True)
 
-        self.logger.debug('h0'*32)
-        self.logger.debug('h0'*32)
-        self.logger.debug('h0'*32)
-        self.logger.debug('h0'*32)
-        self.logger.debug('h0'*32)
         resource = self.get_resource_info()
-        self.logger.debug('h1'*32)
-        self.logger.debug('h1'*32)
-        self.logger.debug(type(resource))
-        self.logger.debug('h2'*32)
-        self.logger.debug('h2'*32)
 
         self.print_output(output=resource)
-        self.logger.debug('h3'*32)
-        self.logger.debug('h3'*32)
-        exit(0)
 
     def destroy(self):
 
