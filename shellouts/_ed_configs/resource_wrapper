@@ -179,7 +179,8 @@ class Main(ResourceCmdHelper):
         else:
             os.chdir(self.run_dir)
 
-        cmds = [ "rm -rf .terraform" ]
+        #cmds = [ "rm -rf .terraform" ]
+        cmds = [ "chmod -R 777 .terraform" ]
         cmds.append("terraform init")
         cmds.append("terraform destroy -auto-approve")
 
