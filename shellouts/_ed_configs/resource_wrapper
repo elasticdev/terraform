@@ -137,7 +137,7 @@ class Main(ResourceCmdHelper):
         if not resource.get("_id") and isinstance(resource,dict): 
             resource["_id"] = resource["id"]
 
-        resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper:54"}
+        resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper:55"}
         resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
 
         return resource
@@ -185,8 +185,11 @@ class Main(ResourceCmdHelper):
         cmds.append("terraform destroy -auto-approve")
 
         for cmd in cmds:
-            results = self.execute(cmd,output_to_json=None)
-            self.successful_output(output=results["output"])
+            for retry in range(0,3):
+                results = self.execute(cmd,output_to_json=None)
+                if results.get("status") is True: break
+                self.logger.debug('having trouble destroying terraform resource at "{}"'.format(self.terraform_dir))
+                sleep(1)
 
         os.chdir(self.run_dir)
 
