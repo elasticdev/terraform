@@ -174,7 +174,10 @@ class Main(ResourceCmdHelper):
 
     def destroy(self):
 
-        os.chdir(self.terraform_dir)
+        if os.path.exists(self.terraform_dir):
+            os.chdir(self.terraform_dir)
+        else:
+            os.chdir(self.run_dir)
 
         cmds = [ "terraform init" ]
         cmds.append("terraform destroy -auto-approve")
