@@ -35,7 +35,11 @@ class Main(ResourceCmdHelper):
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
 
-        self.working_subdir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
+        self.working_subdir = os.environ.get("WORKING_DIR")
+
+        if not self.working_subdir:
+            self.working_subdir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
+
         self.variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
         self.variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
         self.print_ed_output = os.environ.get("TERRAFORM_PARSE_STATE","print_ed_output")
@@ -137,7 +141,8 @@ class Main(ResourceCmdHelper):
         if not resource.get("_id") and isinstance(resource,dict): 
             resource["_id"] = resource["id"]
 
-        resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper:56"}
+        #resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper:57"}
+        resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
         resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
 
         return resource
