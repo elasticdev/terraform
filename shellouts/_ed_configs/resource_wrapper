@@ -35,13 +35,13 @@ class Main(ResourceCmdHelper):
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
 
-        _terraform_dir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
+        self.working_subdir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
         self.variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
         self.variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
         self.print_ed_output = os.environ.get("TERRAFORM_PARSE_STATE","print_ed_output")
 
         self.run_dir = os.getcwd()
-        self.terraform_dir = os.path.join(self.run_dir,_terraform_dir)
+        self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
 
         self.variables_file_path = os.path.join(self.terraform_dir,self.variables_file)
         self.print_ed_output_path = os.path.join(self.terraform_dir,self.print_ed_output)
@@ -131,7 +131,7 @@ class Main(ResourceCmdHelper):
 
         resource["method"] = "terraform"
         resource["stateful_dir"] = self.terraform_dir
-
+        resource["working_subdir"] = self.working_subdir
         self._add_tags(resource)
 
         if not resource.get("_id") and isinstance(resource,dict): 
