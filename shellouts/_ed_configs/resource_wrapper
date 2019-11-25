@@ -35,55 +35,57 @@ class Main(ResourceCmdHelper):
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
 
-        self.working_subdir = os.environ.get("WORKING_DIR")
+        self.working_subdir = os.environ.get("TERRAFORM_DIR")
+        if not self.working_subdir: self.working_subdir = os.environ.get("WORKING_DIR","var/tmp/terraform")
 
-        if not self.working_subdir:
-            self.working_subdir = os.environ.get("TERRAFORM_DIR","var/tmp/terraform")
-
-        self.variables_template = os.environ.get("TERRAFORM_TEMPLATE","variables.ja2")
-        self.variables_file = os.environ.get("TERRAFORM_VARIABLES_FILE","variables.tf")
         self.print_ed_output = os.environ.get("TERRAFORM_PARSE_STATE","print_ed_output")
+        self.terraform_template_files = os.environ.get("TERRAFORM_TEMPLATE_FILES")
+
+        if not self.terraform_template_files:
+            self.terraform_template_files = [ "variables" ]
+        else:
+            self.terraform_template_files = [ template_file.strip() for template_file in self.terraform_template_files.split(",") ]
 
         self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
-
-        self.variables_file_path = os.path.join(self.terraform_dir,self.variables_file)
         self.print_ed_output_path = os.path.join(self.terraform_dir,self.print_ed_output)
-        #self.variables_template = os.path.join(self.terraform_dir,_variables_template)
-        #self.variables_file = os.path.join(self.terraform_dir,_variables_file)
 
     def _templify(self,**kwargs):
 
         clobber = kwargs.get("clobber")
-        variables_template_path = os.path.join(self.terraform_dir,self.variables_template)
 
-        if os.path.exists(self.variables_file_path) and not clobber:
-            self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(self.variables_file_path))
-            return
+        for template_file in self.terraform_template_files:
 
-        if not os.path.exists(variables_template_path):
-            self.logger.error("terraform variables template does not exists at {} - skipping templifying of it".format(variables_template_path))
-            os.chdir(self.run_dir)
-            exit(9)
-            return
+            template_filepath = os.path.join(self.terraform_dir,"{}.ja2".format(template_file))
+            file_path = os.path.join(self.terraform_dir,"{}.tf".format(template_file))
 
-        self.logger.debug("creating terraform variables file {} from {}".format(self.variables_file_path,variables_template_path))
+            if os.path.exists(file_path) and not clobber:
+                self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(file_path))
+                return
 
-        templateVars = {}
+            if not os.path.exists(template_filepath):
+                self.logger.error("terraform variables template does not exists at {} - skipping templifying of it".format(template_filepath))
+                os.chdir(self.run_dir)
+                exit(9)
+                return
 
-        for _var in os.environ["OS_TEMPLATE_VARS"].split(","):
-            var = _var.strip().upper()
-            if not os.environ.get(var): continue
-            # For Terraform, you need to use double quotes instead of second quotes
-            templateVars[var] = os.environ[var].replace("'",'"')
+            self.logger.debug("creating terraform variables file {} from {}".format(file_path,template_filepath))
 
-        templateLoader = jinja2.FileSystemLoader(searchpath="/")
-        templateEnv = jinja2.Environment(loader=templateLoader)
-        template = templateEnv.get_template(variables_template_path)
-        outputText = template.render( templateVars )
-        writefile = open(self.variables_file_path,"wb")
-        writefile.write(outputText)
-        writefile.close()
+            templateVars = {}
+
+            for _var in os.environ["OS_TEMPLATE_VARS"].split(","):
+                var = _var.strip().upper()
+                if not os.environ.get(var): continue
+                # For Terraform, you need to use double quotes instead of second quotes
+                templateVars[var] = os.environ[var].replace("'",'"')
+
+            templateLoader = jinja2.FileSystemLoader(searchpath="/")
+            templateEnv = jinja2.Environment(loader=templateLoader)
+            template = templateEnv.get_template(template_filepath)
+            outputText = template.render( templateVars )
+            writefile = open(file_path,"wb")
+            writefile.write(outputText)
+            writefile.close()
    
     def _format_output(self,**kwargs):
 
@@ -151,11 +153,6 @@ class Main(ResourceCmdHelper):
 
         self._templify(**self.inputargs)
 
-        if not os.path.exists(self.variables_file_path):
-            self.logger.warn("terraform variables file must exists at {} - something went wrong".format(self.variables_file_path))
-            os.chdir(self.run_dir)
-            exit(9)
-
         if not os.path.exists(self.terraform_dir):
             self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
             os.chdir(self.run_dir)
@@ -216,8 +213,8 @@ environmental variables:
     basic:
         METHOD
         TERRAFORM_DIR (optional)
-        TERRAFORM_TEMPLATE (optional)
-        TERRAFORM_VARIABLES_FILE (optional)
+        WORKING_DIR (optional)
+        TERRAFORM_TEMPLATE_FILES (optional)
         CLOBBER (optional - to clobber existing templified if it exists already)
 
     create:
@@ -244,9 +241,9 @@ if __name__ == '__main__':
     else:
         set_env_vars = [ "method",
                          "clobber",
+                         "working_dir",
                          "terraform_dir",
-                         "terraform_template",
-                         "terraform_variables_file",
+                         "terraform_template_files",
                          "resource_type",
                          "resource_tags",
                          "os_template_vars" ]
