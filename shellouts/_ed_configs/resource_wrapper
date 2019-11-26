@@ -38,7 +38,7 @@ class Main(ResourceCmdHelper):
         self.working_subdir = os.environ.get("TERRAFORM_DIR")
         if not self.working_subdir: self.working_subdir = os.environ.get("WORKING_DIR","var/tmp/terraform")
 
-        self.print_ed_output = os.environ.get("TERRAFORM_PARSE_STATE","print_ed_output")
+        self.postscript = os.environ.get("POSTSCRIPT","print_ed_output")
         self.terraform_template_files = os.environ.get("TERRAFORM_TEMPLATE_FILES")
 
         if not self.terraform_template_files:
@@ -48,7 +48,14 @@ class Main(ResourceCmdHelper):
 
         self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
-        self.print_ed_output_path = os.path.join(self.terraform_dir,self.print_ed_output)
+        self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
+        self.docker_image = os.environ.get("DOCKER_EXEC_ENV","elasticdev/terraform-run-env")
+        self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
+        self.use_docker = os.environ.get("USE_DOCKER")
+        self.stateful_id = os.environ.get("STATEFUL_ID")
+
+        if self.use_docker and not self.stateful_id:
+            self.logger.error("STATEFUL_ID needs to be set for using of docker run environments")
 
     def _templify(self,**kwargs):
 
@@ -120,7 +127,7 @@ class Main(ResourceCmdHelper):
     def _get_state_info(self):
 
         os.chdir(self.terraform_dir)
-        cmd = [ "./{}".format(self.print_ed_output) ]
+        cmd = [ "./{}".format(self.postscript) ]
         output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
         values = convert_ed_output_to_values(output)
         os.chdir(self.run_dir)
@@ -135,7 +142,6 @@ class Main(ResourceCmdHelper):
             self.logger.warn("resource needs to be a dictionary!")
             exit(9)
 
-        resource["method"] = "terraform"
         resource["stateful_dir"] = self.terraform_dir
         resource["working_subdir"] = self.working_subdir
         self._add_tags(resource)
@@ -144,9 +150,107 @@ class Main(ResourceCmdHelper):
             resource["_id"] = resource["id"]
 
         resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
-        resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
+        env_vars = {"METHOD":"destroy"}
+
+        if self.inputargs.get("use_docker"):
+            resource["method"] = "terraform_docker_env"
+            env_vars["USE_DOCKER"] = True
+            env_vars["DOCKER_EXEC_ENV"] = self.docker_image
+        else:
+            resource["method"] = "terraform"
+
+        resource["destroy"]["env_vars"] = json.dumps(env_vars)
 
         return resource
+
+    def _exec_local_create(self):
+
+        cmds = [ "terraform init" ]
+        cmds.append("terraform plan")
+
+        os.chdir(self.terraform_dir)
+        
+        for cmd in cmds: self.execute(cmd,output_to_json=False,exit_error=True)
+
+        cmd = "terraform apply -auto-approve"
+        results = self.execute(cmd,output_to_json=False,exit_error=False)
+
+        if results.get("status") is False: 
+            cmd = "terraform destroy -auto-approve"
+            self.execute(cmd,output_to_json=False,exit_error=False)
+            self.logger.error("terraform create failed! tried to revert changes")
+            exit(9)
+
+    def _create_env_file(self,method):
+
+        docker_env_file = os.environ.get("DOCKER_ENV_FILE",".env")
+        docker_env_fields = os.environ.get("DOCKER_ENV_FIELDS")
+
+        f = open(docker_env_file,"w")
+        f.write("{}={}".format("METHOD",method))
+
+        if not docker_env_fields: 
+            f.close()
+            return docker_env_file
+
+        for docker_env_field in docker_env_fields:
+            if not os.environ.get(docker_env_field.upper()): continue
+            f.write("{}={}".format(docker_env_field.upper(),os.environ[docker_env_field.upper()]))
+
+        f.close()
+
+        return docker_env_file
+
+    def _cleanup_docker_exec_env(self,stateful_path):
+
+        os.chdir(self.terraform_dir)
+        cmd = "rm -rf {}".format(stateful_path)
+        self.execute(cmd,output_to_json=False,exit_error=False)
+
+    def _exec_docker_run(self,method,stateful_path):
+
+        os.chdir(stateful_path)
+
+        docker_env_file = self._create_env_file("create")
+
+        cmd = 'docker run --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
+                                                                     stateful_path,
+                                                                     self.share_dir,
+                                                                     self.docker_image)
+
+        return self.execute(cmd,output_to_json=False,exit_error=False)
+
+    def _set_exec_docker_dir(self):
+
+        stateful_path = os.path.join(self.share_dir,self.stateful_id)
+
+        # create working docker run directory
+        cmds = []
+        if os.path.exist(stateful_path): 
+            cmds.append("rm -rf {}".format(stateful_path))
+        cmds.append("rsync -avug {} {}".format(self.terraform_dir,stateful_path))
+
+        for cmd in cmds:
+            self.execute(cmd,output_to_json=False,exit_error=True)
+
+        return stateful_path
+
+    def _exec_docker_create(self):
+
+        stateful_path = self._set_exec_docker_dir()
+        results = self._exec_docker_run("create",stateful_path)
+
+        if results.get("status") is False: 
+            results = self._exec_docker_run("destroy",stateful_path)
+            self._cleanup_docker_exec_env(stateful_path)
+            self.logger.error("terraform create failed! tried to revert changes")
+            exit(9)
+
+        cmd = "rsync -avug {} {}".format(stateful_path,self.terraform_dir)
+        self.execute(cmd,output_to_json=False,exit_error=True)
+
+        # clean up stateful_path that was used for docker execution
+        self._cleanup_docker_exec_env(stateful_path)
 
     def create(self):
 
@@ -157,32 +261,28 @@ class Main(ResourceCmdHelper):
             os.chdir(self.run_dir)
             exit(9)
 
-        if not os.path.exists(self.print_ed_output_path):
-            self.logger.warn("script to parse terraform must exists here {}".format(self.print_ed_output_path))
+        if not os.path.exists(self.postscript_path):
+            self.logger.warn("script to parse terraform must exists here {}".format(self.postscript_path))
             exit(9)
 
-        cmds = [ "terraform init" ]
-        cmds.append("terraform plan")
-        cmds.append("terraform apply -auto-approve")
+        if not self.inputargs.get("use_docker"): 
+            self._exec_local_create()
+        else:
+            self._exec_docker_create()
 
-        os.chdir(self.terraform_dir)
-        for cmd in cmds:
-            self.execute(cmd,output_to_json=False,exit_error=True)
-
+        os.chdir(self.run_dir)
         resource = self.get_resource_info()
-
         self.print_output(output=resource)
 
-    def destroy(self):
+    def _exec_local_destroy(self):
 
         if os.path.exists(self.terraform_dir):
-            _dir = self.terraform_dir
+            exec_dir = self.terraform_dir
         else:
-            _dir = self.run_dir
+            exec_dir = self.run_dir
 
-        os.chdir(_dir)
+        os.chdir(exec_dir)
 
-        #cmds = [ "rm -rf .terraform" ]
         cmds = [ "chmod -R 777 .terraform" ]
         cmds.append("terraform init")
         cmds.append("terraform destroy -auto-approve")
@@ -190,14 +290,31 @@ class Main(ResourceCmdHelper):
         for cmd in cmds:
             for retry in range(0,3):
                 results = self.execute(cmd,output_to_json=None)
-                if results.get("status") is True: break
-                self.logger.debug('having trouble destroying terraform resource at "{}"'.format(_dir))
+                if results.get("status") is True: return results
+                self.logger.debug('having trouble destroying terraform resource at "{}"'.format(exec_dir))
                 sleep(1)
 
+        return results
+
+    def _exec_docker_destroy(self):
+
+        stateful_path = self._set_exec_docker_dir()
+        results = self._exec_docker_run("destroy",stateful_path)
+
+        # clean up stateful_path that was used for docker execution
+        self._cleanup_docker_exec_env(stateful_path)
+
+        return results
+
+    def destroy(self):
+
+        if not self.inputargs.get("use_docker"): 
+            results = self._exec_local_destroy()
+        else:
+            results = self._exec_docker_destroy()
+
         os.chdir(self.run_dir)
-        #os.system("rm -rf {}".format(_dir))
-        self.successful_output(output=results["output"])
-        #self.cmd_failed(failed_message=failed_message)
+        self.successful_output(output=results.get("output"))
 
 def usage():
 
@@ -209,17 +326,32 @@ or
 script + json_input (as argument)
 
 environmental variables:
+
     basic:
-        METHOD
-        TERRAFORM_DIR (optional)
-        WORKING_DIR (optional)
-        TERRAFORM_TEMPLATE_FILES (optional)
+        USE_DOCKER (optional for USE_DOCKER) - use docker run execution
+        STATEFUL_ID (needed for USE_DOCKER) - the stateful_id to reference for recording the state
+        DOCKER_ENV_FIELDS (optional for USE_DOCKER) - the environmental keys to create environmental file with
+        DOCKER_EXEC_ENV (default elasticdev/terraform-run-env) - docker container/image to run execution with
+        DOCKER_ENV_FILE (default .env) - name of the docker env file to create
+        SHARE_DIR (default is /var/tmp/share) - the directory that is shared with docker host that is 
+                                                used for the volume sharing when execution
+
+        METHOD - create/destroy
+
+        WORKING_DIR (optional) - working base directory to execute from
+        TERRAFORM_DIR (optional) - if WORKING_DIR not set, check this variable
+
         CLOBBER (optional - to clobber existing templified if it exists already)
+
+        TERRAFORM_TEMPLATE_FILES (optional) - files to create configuration files for
+
+        POSTSCRIPT (optional) - run after the execution.  typically used to parse the terraform
+                                state file
 
     create:
         RESOURCE_TYPE
         RESOURCE_TAGS
-        OS_TEMPLATE_VARS
+        OS_TEMPLATE_VARS - environmental variables use for templating terraform files
 
     destroy:
 
@@ -239,6 +371,7 @@ if __name__ == '__main__':
         main.set_inputargs(json_input=json_input)
     else:
         set_env_vars = [ "method",
+                         "use_docker",
                          "clobber",
                          "working_dir",
                          "terraform_dir",
