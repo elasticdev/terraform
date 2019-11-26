@@ -143,7 +143,6 @@ class Main(ResourceCmdHelper):
         if not resource.get("_id") and isinstance(resource,dict): 
             resource["_id"] = resource["id"]
 
-        #resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper:57"}
         resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
         resource["destroy"]["env_vars"] = json.dumps({"METHOD":"destroy"})
 
