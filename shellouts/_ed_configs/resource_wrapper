@@ -47,8 +47,11 @@ class Main(ResourceCmdHelper):
             self.terraform_template_files = [ template_file.strip() for template_file in self.terraform_template_files.split(",") ]
 
         self.run_dir = os.getcwd()
+
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
         self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
+
+
         self.docker_image = os.environ.get("DOCKER_EXEC_ENV","elasticdev/terraform-run-env")
         self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
         self.use_docker = os.environ.get("USE_DOCKER")
@@ -140,8 +143,6 @@ class Main(ResourceCmdHelper):
             self.logger.warn("resource needs to be a dictionary!")
             exit(9)
 
-        resource["stateful_dir"] = self.terraform_dir
-        resource["working_subdir"] = self.working_subdir
         self._add_tags(resource)
 
         if not resource.get("_id") and isinstance(resource,dict): 
@@ -158,6 +159,7 @@ class Main(ResourceCmdHelper):
             env_vars["USE_DOCKER"] = True
             env_vars["DOCKER_EXEC_ENV"] = self.docker_image
         else:
+            resource["working_subdir"] = self.working_subdir
             resource["method"] = "terraform"
 
         resource["destroy"]["env_vars"] = json.dumps(env_vars)
