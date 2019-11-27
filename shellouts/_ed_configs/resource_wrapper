@@ -188,9 +188,6 @@ class Main(ResourceCmdHelper):
 
         file_path = os.path.join(os.getcwd(),docker_env_file)
         self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
-        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
-        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
-        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
 
         f = open(file_path,"w")
         f.write("{}={}".format("METHOD",method))
