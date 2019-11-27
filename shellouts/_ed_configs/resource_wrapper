@@ -186,21 +186,18 @@ class Main(ResourceCmdHelper):
         docker_env_file = os.environ.get("DOCKER_ENV_FILE",".env")
         docker_env_fields = os.environ.get("DOCKER_ENV_FIELDS")
 
-        self.logger.debug("{}".format(os.getcwd()))
-        self.logger.debug("{}".format(os.getcwd()))
-        self.logger.debug("{}".format(os.getcwd()))
-        self.logger.debug("{}".format(os.getcwd()))
-        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
-        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
-        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
-        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
+        file_path = os.path.join(os.getcwd(),docker_env_file)
+        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
+        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
+        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
+        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
 
-        f = open(docker_env_file,"w")
+        f = open(file_path,"w")
         f.write("{}={}".format("METHOD",method))
 
         if not docker_env_fields: 
             f.close()
-            return docker_env_file
+            return file_path
 
         for docker_env_field in docker_env_fields.split(","):
             if not os.environ.get(docker_env_field.strip().upper()): continue
@@ -209,7 +206,7 @@ class Main(ResourceCmdHelper):
 
         f.close()
 
-        return docker_env_file
+        return file_path
 
     def _cleanup_docker_exec_env(self,stateful_path):
 
@@ -221,6 +218,10 @@ class Main(ResourceCmdHelper):
 
         os.chdir(stateful_path)
         docker_env_file = self._create_env_file("create")
+
+        if not os.path.exists(docker_env_file):
+            self.logger.error("Cannot find environmental file {}".format(docker_env_file))
+            exit(9)
 
         cmd = 'docker run --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
                                                                      stateful_path,
@@ -237,9 +238,7 @@ class Main(ResourceCmdHelper):
         cmds = []
         if os.path.exists(stateful_path): 
             cmds.append("rm -rf {}".format(stateful_path))
-        cmds.append("rsync -avug {} {}".format(self.terraform_dir,stateful_path))
-        # Testingyoyo
-        cmds.append("sleep 60")
+        cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,stateful_path))
 
         for cmd in cmds:
             self.execute(cmd,output_to_json=False,exit_error=True)
@@ -257,7 +256,7 @@ class Main(ResourceCmdHelper):
             self.logger.error("terraform create failed! tried to revert changes")
             exit(9)
 
-        cmd = "rsync -avug {} {}".format(stateful_path,self.terraform_dir)
+        cmd = "rsync -avug {}/ {}".format(stateful_path,self.terraform_dir)
         self.execute(cmd,output_to_json=False,exit_error=True)
 
         # clean up stateful_path that was used for docker execution
