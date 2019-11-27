@@ -323,8 +323,10 @@ class Main(ResourceCmdHelper):
         stateful_path = self._set_exec_docker_dir()
         results = self._exec_docker_run(stateful_path,method=None)
 
+        # Testingyoyo
         # clean up stateful_path that was used for docker execution
-        self._cleanup_docker_exec_env(stateful_path)
+        #self._cleanup_docker_exec_env(stateful_path)
+        raise
 
         return results
 
