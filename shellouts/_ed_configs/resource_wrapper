@@ -163,6 +163,7 @@ class Main(ResourceCmdHelper):
     def _exec_local_create(self):
 
         cmds = [ "terraform init" ]
+        cmds.append("chmod -R 777 .terraform")
         cmds.append("terraform plan")
 
         os.chdir(self.terraform_dir)
@@ -292,7 +293,7 @@ class Main(ResourceCmdHelper):
         os.chdir(exec_dir)
 
         cmds = [ "chmod -R 777 .terraform" ]
-        cmds.append("terraform init")
+        #cmds.append("terraform init")
         cmds.append("terraform destroy -auto-approve")
 
         for cmd in cmds:
