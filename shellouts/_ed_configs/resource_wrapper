@@ -53,6 +53,7 @@ class Main(ResourceCmdHelper):
         self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
         self.use_docker = os.environ.get("USE_DOCKER")
         self.stateful_id = os.environ.get("STATEFUL_ID")
+        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper:71"
 
     def _templify(self,**kwargs):
 
@@ -146,7 +147,7 @@ class Main(ResourceCmdHelper):
         if not resource.get("_id") and isinstance(resource,dict): 
             resource["_id"] = resource["id"]
 
-        resource["destroy"] = {"shelloutconfig":"elasticdev:::terraform::resource_wrapper"}
+        resource["destroy"] = {"shelloutconfig":self.shelloutconfig}
         env_vars = {"METHOD":"destroy"}
 
         if self.inputargs.get("use_docker"):
