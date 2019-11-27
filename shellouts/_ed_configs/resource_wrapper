@@ -193,9 +193,9 @@ class Main(ResourceCmdHelper):
             f.close()
             return docker_env_file
 
-        for docker_env_field in docker_env_fields:
-            if not os.environ.get(docker_env_field.upper()): continue
-            f.write("{}={}".format(docker_env_field.upper(),os.environ[docker_env_field.upper()]))
+        for docker_env_field in docker_env_fields.split(","):
+            if not os.environ.get(docker_env_field.strip().upper()): continue
+            f.write("{}={}".format(docker_env_field.strip().upper(),os.environ[docker_env_field.strip().upper()]))
 
         f.close()
 
