@@ -54,9 +54,6 @@ class Main(ResourceCmdHelper):
         self.use_docker = os.environ.get("USE_DOCKER")
         self.stateful_id = os.environ.get("STATEFUL_ID")
 
-        if self.use_docker and not self.stateful_id:
-            self.logger.error("STATEFUL_ID needs to be set for using of docker run environments")
-
     def _templify(self,**kwargs):
 
         clobber = kwargs.get("clobber")
@@ -261,6 +258,9 @@ class Main(ResourceCmdHelper):
         #self._cleanup_docker_exec_env(stateful_path)
 
     def create(self):
+
+        if self.use_docker and not self.stateful_id:
+            self.logger.error("STATEFUL_ID needs to be set for using of docker run environments")
 
         self._templify(**self.inputargs)
 
