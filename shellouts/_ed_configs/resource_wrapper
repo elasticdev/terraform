@@ -226,7 +226,7 @@ class Main(ResourceCmdHelper):
 
         # create working docker run directory
         cmds = []
-        if os.path.exist(stateful_path): 
+        if os.path.exists(stateful_path): 
             cmds.append("rm -rf {}".format(stateful_path))
         cmds.append("rsync -avug {} {}".format(self.terraform_dir,stateful_path))
 
