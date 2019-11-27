@@ -47,16 +47,13 @@ class Main(ResourceCmdHelper):
             self.terraform_template_files = [ template_file.strip() for template_file in self.terraform_template_files.split(",") ]
 
         self.run_dir = os.getcwd()
-
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
         self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
-
-
         self.docker_image = os.environ.get("DOCKER_EXEC_ENV","elasticdev/terraform-run-env")
         self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
         self.use_docker = os.environ.get("USE_DOCKER")
         self.stateful_id = os.environ.get("STATEFUL_ID")
-        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper:72"
+        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper:73"
 
     def _templify(self,**kwargs):
 
