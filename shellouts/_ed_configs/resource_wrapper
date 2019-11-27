@@ -230,6 +230,8 @@ class Main(ResourceCmdHelper):
         if os.path.exists(stateful_path): 
             cmds.append("rm -rf {}".format(stateful_path))
         cmds.append("rsync -avug {} {}".format(self.terraform_dir,stateful_path))
+        # Testingyoyo
+        cmds.append("sleep 60")
 
         for cmd in cmds:
             self.execute(cmd,output_to_json=False,exit_error=True)
@@ -251,7 +253,8 @@ class Main(ResourceCmdHelper):
         self.execute(cmd,output_to_json=False,exit_error=True)
 
         # clean up stateful_path that was used for docker execution
-        self._cleanup_docker_exec_env(stateful_path)
+        # Testingyoyo
+        #self._cleanup_docker_exec_env(stateful_path)
 
     def create(self):
 
