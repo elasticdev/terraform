@@ -186,6 +186,15 @@ class Main(ResourceCmdHelper):
         docker_env_file = os.environ.get("DOCKER_ENV_FILE",".env")
         docker_env_fields = os.environ.get("DOCKER_ENV_FIELDS")
 
+        self.logger.debug("{}".format(os.getcwd()))
+        self.logger.debug("{}".format(os.getcwd()))
+        self.logger.debug("{}".format(os.getcwd()))
+        self.logger.debug("{}".format(os.getcwd()))
+        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
+        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
+        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
+        self.logger.debug("Writing environment file {} with field {}".format(docker_env_file,docker_env_fields))
+
         f = open(docker_env_file,"w")
         f.write("{}={}".format("METHOD",method))
 
@@ -211,7 +220,6 @@ class Main(ResourceCmdHelper):
     def _exec_docker_run(self,method,stateful_path):
 
         os.chdir(stateful_path)
-
         docker_env_file = self._create_env_file("create")
 
         cmd = 'docker run --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
