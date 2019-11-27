@@ -255,8 +255,7 @@ class Main(ResourceCmdHelper):
         self.execute(cmd,output_to_json=False,exit_error=True)
 
         # clean up stateful_path that was used for docker execution
-        # Testingyoyo
-        #self._cleanup_docker_exec_env(stateful_path)
+        self._cleanup_docker_exec_env(stateful_path)
 
     def create(self):
 
