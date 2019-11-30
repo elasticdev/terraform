@@ -219,11 +219,11 @@ class Main(ResourceCmdHelper):
         cmd = "rm -rf {}".format(stateful_path)
         self.execute(cmd,output_to_json=False,exit_error=False)
 
-    def _exec_docker_run(self,stateful_path,method=None):
+    def _exec_docker_run(self,stateful_path,method=None,create_env=None):
 
         os.chdir(stateful_path)
 
-        if method: 
+        if method and create_env: 
             docker_env_file = self._create_env_file(method)
         else:
             docker_env_file = self._get_env_filepath()
@@ -264,10 +264,10 @@ class Main(ResourceCmdHelper):
     def _exec_docker_create(self):
 
         stateful_path = self._set_exec_docker_dir()
-        results = self._exec_docker_run(stateful_path,method="create")
+        results = self._exec_docker_run(stateful_path,method="create",create_env=True)
 
         if results.get("status") is False: 
-            results = self._exec_docker_run(stateful_path,method="destroy")
+            results = self._exec_docker_run(stateful_path,method="destroy",create_env=True)
             self._cleanup_docker_exec_env(stateful_path)
             self.logger.error("terraform create failed! tried to revert changes")
             exit(9)
@@ -328,7 +328,7 @@ class Main(ResourceCmdHelper):
     def _exec_docker_destroy(self):
 
         stateful_path = self._set_exec_docker_dir()
-        results = self._exec_docker_run(stateful_path,method=None)
+        results = self._exec_docker_run(stateful_path,method="destroy")
 
         # Testingyoyo
         # clean up stateful_path that was used for docker execution
