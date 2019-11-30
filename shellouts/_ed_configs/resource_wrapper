@@ -232,10 +232,17 @@ class Main(ResourceCmdHelper):
             self.logger.error("Cannot find environmental file {}".format(docker_env_file))
             exit(9)
 
-        cmd = 'docker run --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
-                                                                     stateful_path,
-                                                                     self.share_dir,
-                                                                     self.docker_image)
+        if method:
+            cmd = 'docker run -e METHOD="{}" --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
+                                                                                        method,
+                                                                                        stateful_path,
+                                                                                        self.share_dir,
+                                                                                        self.docker_image)
+        else:
+            cmd = 'docker run --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
+                                                                         stateful_path,
+                                                                         self.share_dir,
+                                                                         self.docker_image)
 
         return self.execute(cmd,output_to_json=False,exit_error=False)
 
