@@ -233,8 +233,8 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         if method:
-            cmd = 'docker run -e METHOD="{}" --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
-                                                                                        method,
+            cmd = 'docker run -e METHOD="{}" --env-file {} -it --rm -v {}:{} {}'.format(method,
+                                                                                        docker_env_file,
                                                                                         stateful_path,
                                                                                         self.share_dir,
                                                                                         self.docker_image)
