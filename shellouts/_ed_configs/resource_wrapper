@@ -233,12 +233,10 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         self.logger.debug('a'*32)
-        self.logger.debug('a'*32)
         self.logger.debug(method)
         self.logger.debug(method)
         self.logger.debug(method)
         self.logger.debug(method)
-        self.logger.debug('b'*32)
         self.logger.debug('b'*32)
 
         if method:
