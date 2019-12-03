@@ -53,7 +53,7 @@ class Main(ResourceCmdHelper):
         self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
         self.use_docker = os.environ.get("USE_DOCKER")
         self.stateful_id = os.environ.get("STATEFUL_ID")
-        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper:75"
+        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper:84"
 
     def _templify(self,**kwargs):
 
