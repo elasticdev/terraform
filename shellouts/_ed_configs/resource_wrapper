@@ -124,6 +124,12 @@ class Main(ResourceCmdHelper):
 
     def _get_state_info(self):
 
+        script_path = os.path.join(self.terraform_dir,self.postscript)
+
+        if os.path.exists(script_path):
+            self.logger.warn("post script {} does not exists".format(script_path))
+            return 
+
         os.chdir(self.terraform_dir)
         cmd = [ "./{}".format(self.postscript) ]
         output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
@@ -135,6 +141,8 @@ class Main(ResourceCmdHelper):
     def get_resource_info(self):
 
         resource = self._get_state_info()
+
+        if not resource: return 
 
         if not isinstance(resource,dict): 
             self.logger.warn("resource needs to be a dictionary!")
@@ -308,6 +316,14 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.run_dir)
         resource = self.get_resource_info()
+        if not resource: exit(0)
+
+        ############################
+        # Testingyoyo
+        ############################
+        exit(0)
+        ############################
+
         self.print_output(output=resource)
 
     def _exec_local_destroy(self):
