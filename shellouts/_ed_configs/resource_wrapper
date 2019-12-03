@@ -318,12 +318,6 @@ class Main(ResourceCmdHelper):
         resource = self.get_resource_info()
         if not resource: exit(0)
 
-        ############################
-        # Testingyoyo
-        ############################
-        exit(0)
-        ############################
-
         self.print_output(output=resource)
 
     def _exec_local_destroy(self):
