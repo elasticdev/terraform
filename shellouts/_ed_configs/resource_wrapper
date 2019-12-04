@@ -144,14 +144,26 @@ class Main(ResourceCmdHelper):
 
         if not resource: return 
 
-        if not isinstance(resource,dict): 
-            self.logger.warn("resource needs to be a dictionary!")
+        if not isinstance(resource,dict) and not isinstance(resource,list):
+            self.logger.warn("resource needs to be a dictionary or list!")
             exit(9)
 
-        self._add_tags(resource)
+        if isinstance(resource,dict): 
+            self._add_tags(resource)
+            self._add_destroy_parameters(resource)
 
-        if not resource.get("_id") and isinstance(resource,dict): 
-            resource["_id"] = resource["id"]
+        if isinstance(resource,list):
+            for _resource in resource:
+                self._add_tags(_resource)
+                if not _resource.get("main"): continue
+                self._add_destroy_parameters(_resource)
+
+        return resource
+
+    def _add_destroy_parameters(self,resource):
+
+        #if not resource.get("_id") and isinstance(resource,dict): 
+        #    resource["_id"] = resource["id"]
 
         # Create destroy resource arguments and reference
         resource["destroy"] = {"shelloutconfig":self.shelloutconfig}
