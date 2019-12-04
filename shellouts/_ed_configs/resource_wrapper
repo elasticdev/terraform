@@ -126,7 +126,7 @@ class Main(ResourceCmdHelper):
 
         script_path = os.path.join(self.terraform_dir,self.postscript)
 
-        if os.path.exists(script_path):
+        if not os.path.exists(script_path):
             self.logger.warn("post script {} does not exists".format(script_path))
             return 
 
