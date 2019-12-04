@@ -240,13 +240,6 @@ class Main(ResourceCmdHelper):
             self.logger.error("Cannot find environmental file {}".format(docker_env_file))
             exit(9)
 
-        self.logger.debug('a'*32)
-        self.logger.debug(method)
-        self.logger.debug(method)
-        self.logger.debug(method)
-        self.logger.debug(method)
-        self.logger.debug('b'*32)
-
         if method:
             cmd = 'docker run -e METHOD="{}" --env-file {} -it --rm -v {}:{} {}'.format(method,
                                                                                         docker_env_file,
