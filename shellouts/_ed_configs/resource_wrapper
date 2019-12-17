@@ -253,16 +253,16 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         if method:
-            cmd = 'docker run -e METHOD="{}" --env-file {} -it --rm -v {}:{} {}'.format(method,
-                                                                                        docker_env_file,
-                                                                                        stateful_path,
-                                                                                        self.share_dir,
-                                                                                        self.docker_image)
+            cmd = 'docker run -e METHOD="{}" --env-file {} --rm -v {}:{} {}'.format(method,
+                                                                                    docker_env_file,
+                                                                                    stateful_path,
+                                                                                    self.share_dir,
+                                                                                    self.docker_image)
         else:
-            cmd = 'docker run --env-file {} -it --rm -v {}:{} {}'.format(docker_env_file,
-                                                                         stateful_path,
-                                                                         self.share_dir,
-                                                                         self.docker_image)
+            cmd = 'docker run --env-file {} --rm -v {}:{} {}'.format(docker_env_file,
+                                                                     stateful_path,
+                                                                     self.share_dir,
+                                                                     self.docker_image)
 
         return self.execute(cmd,output_to_json=False,exit_error=False)
 
