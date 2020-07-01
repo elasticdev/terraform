@@ -14,7 +14,7 @@
 #Copyright (C) Gary Leong - All Rights Reserved
 #Unauthorized copying of this file, via any medium is strictly prohibited
 #Proprietary and confidential
-#Written by Gary Leong  <gwleong@gmail.com, September 17,2015
+#Written by Gary Leong  <gwleong@gmail.com, June 17,2020
 
 import jinja2
 import os
@@ -35,10 +35,40 @@ class Main(ResourceCmdHelper):
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
 
+        # The working directory that terraform files will be copied to
         self.working_subdir = os.environ.get("TERRAFORM_DIR")
         if not self.working_subdir: self.working_subdir = os.environ.get("WORKING_DIR","var/tmp/terraform")
 
-        self.postscript = os.environ.get("POSTSCRIPT","print_ed_output")
+        # The postscript file that will be execute after terraform execution is completed.
+        # Typically, this file reads the tfstate file, prints to the standard out to be recorded
+        # and stored in the ED resource table to be used/referenced by other automation.
+        self.postscript = os.environ.get("POSTSCRIPT","tfstate_to_output")
+
+        # This the default script run that will capture the terraform outputted from the 
+        # postscript file to be stored to be referenced and used.  For example, we can store
+        # the vpc id, vm/instance id, database endpoint
+        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper"
+
+        # The docker image to execute terraform files
+        self.docker_image = os.environ.get("DOCKER_EXEC_ENV","elasticdev/terraform-run-env")
+
+        # By default, we USE_DOCKER to execute the terraform files.  If disabled, the 
+        # terrform files will be executed directly by the worker which has a specific 
+        # versiion of terraform installed.
+        self.use_docker = os.environ.get("USE_DOCKER")
+
+        # The shared directory is the location in the worker that is temporarily shared with the 
+        # Docker execution container.  This is only used if USE_DOCKER is True.
+        self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
+
+        # The state_id is typically automated and provided by the stack calling this script.
+        # The state_id will reference this specific terraform automation for modification
+        # and destroying
+        self.stateful_id = os.environ.get("STATEFUL_ID")
+
+        # The names of the terraform files that are templated and need to be 
+        # rendered.  This is typically variables with a "ja2" suffix for
+        # jinja2 which is used for templating and rendering
         self.terraform_template_files = os.environ.get("TERRAFORM_TEMPLATE_FILES")
 
         if not self.terraform_template_files:
@@ -49,11 +79,6 @@ class Main(ResourceCmdHelper):
         self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
         self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
-        self.docker_image = os.environ.get("DOCKER_EXEC_ENV","elasticdev/terraform-run-env")
-        self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
-        self.use_docker = os.environ.get("USE_DOCKER")
-        self.stateful_id = os.environ.get("STATEFUL_ID")
-        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper"
 
     def _templify(self,**kwargs):
 
@@ -138,7 +163,7 @@ class Main(ResourceCmdHelper):
 
         return values
 
-    def get_resource_info(self):
+    def _get_resource_info(self):
 
         resource = self._get_state_info()
 
@@ -162,11 +187,21 @@ class Main(ResourceCmdHelper):
 
     def _add_destroy_parameters(self,resource):
 
-        #if not resource.get("_id") and isinstance(resource,dict): 
-        #    resource["_id"] = resource["id"]
+        '''
+        we typically load the destroy parameters along with created resource like a 
+        VPC or database 
+
+        the resource is therefore self contained, whereby it specifies to the 
+        system how it can be destroyed.
+
+        for terraform, we include things like the docker image used to 
+        destroy the resource and any environmental variables 
+        '''
 
         # Create destroy resource arguments and reference
         resource["destroy"] = {"shelloutconfig":self.shelloutconfig}
+
+        # environmental variables to include during destruction
         env_vars = {"METHOD":"destroy"}
 
         if self.stateful_id: env_vars["STATEFUL_ID"] = self.stateful_id
@@ -180,11 +215,19 @@ class Main(ResourceCmdHelper):
             resource["method"] = "terraform"
 
         resource["destroy"]["env_vars"] = json.dumps(env_vars)
+
+        # by default, we include default AWS credentials to be inserted during the destroy.  
+        # we can also modify this script, upload, and version it to include things like GCP and Azure credentials.
         resource["destroy"]["insert_env_vars"] = json.dumps(["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"])
 
         return resource
 
     def _exec_local_create(self):
+
+        '''
+        executes terraform locally on the work rather than a specific 
+        docker container
+        '''
 
         cmds = [ "terraform init" ]
         cmds.append("chmod -R 777 .terraform")
@@ -298,32 +341,15 @@ class Main(ResourceCmdHelper):
         # clean up stateful_path that was used for docker execution
         self._cleanup_docker_exec_env(stateful_path)
 
-    def create(self):
+    def _exec_docker_destroy(self):
 
-        if self.use_docker and not self.stateful_id:
-            self.logger.error("STATEFUL_ID needs to be set for using of docker run environments")
+        stateful_path = self._set_exec_docker_dir()
+        results = self._exec_docker_run(stateful_path,method="destroy")
 
-        self._templify(**self.inputargs)
+        # clean up stateful_path that was used for docker execution
+        self._cleanup_docker_exec_env(stateful_path)
 
-        if not os.path.exists(self.terraform_dir):
-            self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
-            os.chdir(self.run_dir)
-            exit(9)
-
-        if not os.path.exists(self.postscript_path):
-            self.logger.warn("script to parse terraform must exists here {}".format(self.postscript_path))
-            exit(9)
-
-        if not self.inputargs.get("use_docker"): 
-            self._exec_local_create()
-        else:
-            self._exec_docker_create()
-
-        os.chdir(self.run_dir)
-        resource = self.get_resource_info()
-        if not resource: exit(0)
-
-        self.print_output(output=resource)
+        return results
 
     def _exec_local_destroy(self):
 
@@ -347,15 +373,32 @@ class Main(ResourceCmdHelper):
 
         return results
 
-    def _exec_docker_destroy(self):
+    def create(self):
 
-        stateful_path = self._set_exec_docker_dir()
-        results = self._exec_docker_run(stateful_path,method="destroy")
+        if self.use_docker and not self.stateful_id:
+            self.logger.error("STATEFUL_ID needs to be set for using of docker run environments")
 
-        # clean up stateful_path that was used for docker execution
-        self._cleanup_docker_exec_env(stateful_path)
+        self._templify(**self.inputargs)
 
-        return results
+        if not os.path.exists(self.terraform_dir):
+            self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
+            os.chdir(self.run_dir)
+            exit(9)
+
+        if not os.path.exists(self.postscript_path):
+            self.logger.warn("script to parse terraform must exists here {}".format(self.postscript_path))
+            exit(9)
+
+        if not self.inputargs.get("use_docker"): 
+            self._exec_local_create()
+        else:
+            self._exec_docker_create()
+
+        os.chdir(self.run_dir)
+        resource = self._get_resource_info()
+        if not resource: exit(0)
+
+        self.print_output(output=resource)
 
     def destroy(self):
 
@@ -379,25 +422,21 @@ script + json_input (as argument)
 environmental variables:
 
     basic:
-        USE_DOCKER (optional for USE_DOCKER) - use docker run execution
-        STATEFUL_ID (needed for USE_DOCKER) - the stateful_id to reference for recording the state
-        DOCKER_ENV_FIELDS (optional for USE_DOCKER) - the environmental keys to create environmental file with
-        DOCKER_EXEC_ENV (default elasticdev/terraform-run-env) - docker container/image to run execution with
+        USE_DOCKER (optional for USE_DOCKER) - use docker container for execution
+        STATEFUL_ID (needed for USE_DOCKER) - the stateful_id to reference the state of the execution
+        DOCKER_ENV_FIELDS (optional for USE_DOCKER) - the environmental keys to create environmental file 
+        DOCKER_EXEC_ENV (default elasticdev/terraform-run-env) - the docker container/image to run execution
         DOCKER_ENV_FILE (default .env) - name of the docker env file to create
-        SHARE_DIR (default is /var/tmp/share) - the directory that is shared with docker host that is 
-                                                used for the volume sharing when execution
+        SHARE_DIR (default is /var/tmp/share) - the shared directory that is shared with the worker during docker container execution
 
         METHOD - create/destroy
 
-        WORKING_DIR (optional) - working base directory to execute from
-        TERRAFORM_DIR (optional) - if WORKING_DIR not set, check this variable
+        WORKING_DIR (optional) - base working directory to execute from
+        TERRAFORM_DIR (optional) - if WORKING_DIR not set, we use the terraform directory
+        CLOBBER (optional) - clobbers existing templified files if they already exist)
+        TERRAFORM_TEMPLATE_FILES (optional) - template files to create configuration files 
 
-        CLOBBER (optional - to clobber existing templified if it exists already)
-
-        TERRAFORM_TEMPLATE_FILES (optional) - files to create configuration files for
-
-        POSTSCRIPT (optional) - run after the execution.  typically used to parse the terraform
-                                state file
+        POSTSCRIPT (optional) - run after the execution.  typically used to parse the terraform state file
 
     create:
         RESOURCE_TYPE
