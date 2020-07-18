@@ -37,7 +37,7 @@ class Main(ResourceCmdHelper):
 
         # The working directory that terraform files will be copied to
         self.working_subdir = os.environ.get("TERRAFORM_DIR")
-        if not self.working_subdir: self.working_subdir = os.environ.get("WORKING_DIR","var/tmp/terraform")
+        if not self.working_subdir: self.working_subdir = os.environ.get("WORKING_SUBDIR","var/tmp/terraform")
 
         # The postscript file that will be execute after terraform execution is completed.
         # Typically, this file reads the tfstate file, prints to the standard out to be recorded
@@ -431,8 +431,8 @@ environmental variables:
 
         METHOD - create/destroy
 
-        WORKING_DIR (optional) - base working directory to execute from
-        TERRAFORM_DIR (optional) - if WORKING_DIR not set, we use the terraform directory
+        TERRAFORM_DIR (optional) - we use the terraform directory relative to execution directory
+        WORKING_SUBDIR (optional) - if TERRAFORM_DIR not set, we use the WORKING_SUBDIR to reference terraform build environment
         CLOBBER (optional) - clobbers existing templified files if they already exist)
         TERRAFORM_TEMPLATE_FILES (optional) - template files to create configuration files 
 
