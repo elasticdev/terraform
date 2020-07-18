@@ -315,8 +315,10 @@ class Main(ResourceCmdHelper):
 
         # create working docker run directory
         cmds = []
+
         if os.path.exists(stateful_path): 
             cmds.append("rm -rf {}".format(stateful_path))
+
         cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,stateful_path))
 
         for cmd in cmds:
@@ -337,6 +339,10 @@ class Main(ResourceCmdHelper):
 
         cmd = "rsync -avug {}/ {}".format(stateful_path,self.terraform_dir)
         self.execute(cmd,output_to_json=False,exit_error=True)
+
+        # clean up credentials directories
+        cmd = "rm -rf {}/.creds".format(self.terraform_dir)
+        self.execute(cmd,output_to_json=False,exit_error=False)
 
         # clean up stateful_path that was used for docker execution
         self._cleanup_docker_exec_env(stateful_path)
