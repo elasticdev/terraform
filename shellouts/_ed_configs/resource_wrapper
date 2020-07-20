@@ -312,6 +312,7 @@ class Main(ResourceCmdHelper):
     def _set_exec_docker_dir(self):
 
         stateful_path = os.path.join(self.share_dir,self.stateful_id)
+        stateful_dirname = os.path.dirname(stateful_path)
 
         # create working docker run directory
         cmds = []
@@ -319,6 +320,7 @@ class Main(ResourceCmdHelper):
         if os.path.exists(stateful_path): 
             cmds.append("rm -rf {}".format(stateful_path))
 
+        cmds.append("mkdir -p {}".format(stateful_dirname))
         cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,stateful_path))
 
         for cmd in cmds:
