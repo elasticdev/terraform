@@ -76,6 +76,13 @@ class Main(ResourceCmdHelper):
         else:
             self.terraform_template_files = [ template_file.strip() for template_file in self.terraform_template_files.split(",") ]
 
+        try:
+            self.destroy_env_vars = eval(os.environ.get("DESTROY_ENV_VARS"))
+        except:
+            self.destroy_env_vars = None
+
+        self.destroy_execgroup = os.environ.get("DESTROY_EXECGROUP")
+
         self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
         self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
@@ -203,6 +210,7 @@ class Main(ResourceCmdHelper):
 
         # environmental variables to include during destruction
         env_vars = {"METHOD":"destroy"}
+        if self.destroy_env_vars: env_vars = dict(env_vars,**self.destroy_env_vars)
 
         if self.stateful_id: env_vars["STATEFUL_ID"] = self.stateful_id
 
@@ -215,6 +223,7 @@ class Main(ResourceCmdHelper):
             resource["method"] = "terraform"
 
         resource["destroy"]["env_vars"] = json.dumps(env_vars)
+        if self.destroy_execgroup: ["destroy"]["execgroup"] = self.destroy_execgroup
 
         # by default, we include default AWS credentials to be inserted during the destroy.  
         # we can also modify this script, upload, and version it to include things like GCP and Azure credentials.
