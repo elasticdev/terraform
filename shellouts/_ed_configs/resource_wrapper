@@ -223,7 +223,7 @@ class Main(ResourceCmdHelper):
             resource["method"] = "terraform"
 
         resource["destroy"]["env_vars"] = json.dumps(env_vars)
-        if self.destroy_execgroup: ["destroy"]["execgroup"] = self.destroy_execgroup
+        if self.destroy_execgroup: resource["destroy"]["execgroup"] = self.destroy_execgroup
 
         # by default, we include default AWS credentials to be inserted during the destroy.  
         # we can also modify this script, upload, and version it to include things like GCP and Azure credentials.
