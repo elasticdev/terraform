@@ -223,6 +223,8 @@ class Main(ResourceCmdHelper):
             resource["method"] = "terraform"
 
         resource["destroy"]["env_vars"] = json.dumps(env_vars)
+        if env_vars.get("STATEFUL_ID"): resource["destroy"]["stateful_id"] = env_vars["STATEFUL_ID"]
+
         if self.destroy_execgroup: resource["destroy"]["execgroup"] = self.destroy_execgroup
 
         # by default, we include default AWS credentials to be inserted during the destroy.  
