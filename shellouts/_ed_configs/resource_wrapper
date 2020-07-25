@@ -67,10 +67,19 @@ class Main(ResourceCmdHelper):
         self.stateful_id = os.environ.get("STATEFUL_ID")
 
         # stateful_dir
-        self.stateful_dir = os.path.join(self.share_dir,self.stateful_id)
+        self.stateful_dir = os.environ.get("STATEFUL_DIR")
 
-        # credentials directory
-        self.creds_dir = os.path.join(self.stateful_dir,".creds")
+        # run_share_dir
+        if self.stateful_id:
+            self.run_share_dir = os.path.join(self.share_dir,self.stateful_id)
+        else:
+            self.run_share_dir = self.share_dir
+
+        if stateful_dir:
+            # credentials directory
+            self.creds_dir = os.path.join(self.stateful_dir,".creds")
+        else:
+            self.creds_dir = None
 
         # The names of the terraform files that are templated and need to be 
         # rendered.  This is typically variables with a "ja2" suffix for
@@ -296,12 +305,12 @@ class Main(ResourceCmdHelper):
     def _cleanup_docker_exec_env(self):
 
         os.chdir(self.terraform_dir)
-        cmd = "rm -rf {}".format(self.stateful_dir)
+        cmd = "rm -rf {}".format(self.run_share_dir)
         self.execute(cmd,output_to_json=False,exit_error=False)
 
     def _exec_docker_run(self,method=None,create_env=None):
 
-        os.chdir(self.stateful_dir)
+        os.chdir(self.run_share_dir)
 
         if method and create_env: 
             docker_env_file = self._create_env_file(method)
@@ -315,12 +324,12 @@ class Main(ResourceCmdHelper):
         if method:
             cmd = 'docker run -e METHOD="{}" --env-file {} --rm -v {}:{} {}'.format(method,
                                                                                     docker_env_file,
-                                                                                    self.stateful_dir,
+                                                                                    self.run_share_dir,
                                                                                     self.share_dir,
                                                                                     self.docker_image)
         else:
             cmd = 'docker run --env-file {} --rm -v {}:{} {}'.format(docker_env_file,
-                                                                     self.stateful_dir,
+                                                                     self.run_share_dir,
                                                                      self.share_dir,
                                                                      self.docker_image)
 
@@ -331,23 +340,23 @@ class Main(ResourceCmdHelper):
         # create working docker run directory
         cmds = []
 
-        #if os.path.exists(self.stateful_dir): 
+        #if os.path.exists(self.run_share_dir): 
         #    # we keep the dot directories like .creds
-        #    cmds.append("rm -rf {}/*".format(self.stateful_dir))
+        #    cmds.append("rm -rf {}/*".format(self.run_share_dir))
         #else:
-        #    _dirname = os.path.dirname(self.stateful_dir)
+        #    _dirname = os.path.dirname(self.run_share_dir)
         #    cmds.append("mkdir -p {}".format(_dirname))
 
-        _dirname = os.path.dirname(self.stateful_dir)
+        _dirname = os.path.dirname(self.run_share_dir)
         if not os.path.exists(_dirname):
             cmds.append("mkdir -p {}".format(_dirname))
 
-        self.logger.debug("rsync -avug {}/ {}".format(self.terraform_dir,self.stateful_dir))
+        self.logger.debug("rsync -avug {}/ {}".format(self.terraform_dir,self.run_share_dir))
 
-        if os.path.exists(self.creds_dir):
+        if self.creds_dir and os.path.exists(self.creds_dir):
             cmds.append("rsync -avug {} {}/".format(self.creds_dir,self.terraform_dir))
 
-        cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,self.stateful_dir))
+        cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,self.run_share_dir))
 
         for cmd in cmds:
             self.execute(cmd,output_to_json=False,exit_error=True)
@@ -365,14 +374,14 @@ class Main(ResourceCmdHelper):
             self.logger.error("terraform create failed! tried to revert changes")
             exit(9)
 
-        cmd = "rsync -avug {}/ {}".format(self.stateful_dir,self.terraform_dir)
+        cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
         self.execute(cmd,output_to_json=False,exit_error=True)
 
         # clean up credentials directories
         #cmd = "rm -rf {}/.creds".format(self.terraform_dir)
         #self.execute(cmd,output_to_json=False,exit_error=False)
 
-        # clean up stateful_dir that was used for docker execution
+        # clean up run_share_dir that was used for docker execution
         self._cleanup_docker_exec_env()
 
     def _exec_docker_destroy(self):
@@ -380,7 +389,7 @@ class Main(ResourceCmdHelper):
         self._set_exec_docker_dir()
         results = self._exec_docker_run(method="destroy")
 
-        # clean up stateful_dir that was used for docker execution
+        # clean up run_share_dir that was used for docker execution
         self._cleanup_docker_exec_env()
 
         return results
