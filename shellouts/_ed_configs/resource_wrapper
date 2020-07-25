@@ -356,8 +356,8 @@ class Main(ResourceCmdHelper):
         self.execute(cmd,output_to_json=False,exit_error=True)
 
         # clean up credentials directories
-        cmd = "rm -rf {}/.creds".format(self.terraform_dir)
-        self.execute(cmd,output_to_json=False,exit_error=False)
+        #cmd = "rm -rf {}/.creds".format(self.terraform_dir)
+        #self.execute(cmd,output_to_json=False,exit_error=False)
 
         # clean up stateful_path that was used for docker execution
         self._cleanup_docker_exec_env(stateful_path)
