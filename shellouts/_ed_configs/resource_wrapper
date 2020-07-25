@@ -328,21 +328,24 @@ class Main(ResourceCmdHelper):
 
     def _set_exec_docker_dir(self):
 
-        _dirname = os.path.dirname(self.stateful_dir)
-
         # create working docker run directory
         cmds = []
 
-        if os.path.exists(self.stateful_dir): 
-            # we keep the dot directories like .creds
-            cmds.append("rm -rf {}/*".format(self.stateful_dir))
-        else:
+        #if os.path.exists(self.stateful_dir): 
+        #    # we keep the dot directories like .creds
+        #    cmds.append("rm -rf {}/*".format(self.stateful_dir))
+        #else:
+        #    _dirname = os.path.dirname(self.stateful_dir)
+        #    cmds.append("mkdir -p {}".format(_dirname))
+
+        _dirname = os.path.dirname(self.stateful_dir)
+        if not os.path.exists(_dirname):
             cmds.append("mkdir -p {}".format(_dirname))
 
         self.logger.debug("rsync -avug {}/ {}".format(self.terraform_dir,self.stateful_dir))
 
         if os.path.exists(self.creds_dir):
-            cmds.append("rsync -avug {}/ {}".format(self.creds_dir,self.terraform_dir))
+            cmds.append("rsync -avug {} {}/".format(self.creds_dir,self.terraform_dir))
 
         cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,self.stateful_dir))
 
