@@ -75,7 +75,7 @@ class Main(ResourceCmdHelper):
         else:
             self.run_share_dir = self.share_dir
 
-        if stateful_dir:
+        if self.stateful_dir:
             # credentials directory
             self.creds_dir = os.path.join(self.stateful_dir,".creds")
         else:
