@@ -334,6 +334,8 @@ class Main(ResourceCmdHelper):
         else:
             cmds.append("mkdir -p {}".format(stateful_dirname))
 
+        self.logger.debug("rsync -avug {}/ {}".format(self.terraform_dir,stateful_path))
+
         cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,stateful_path))
 
         for cmd in cmds:
