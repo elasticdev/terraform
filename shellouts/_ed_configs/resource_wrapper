@@ -329,9 +329,11 @@ class Main(ResourceCmdHelper):
         cmds = []
 
         if os.path.exists(stateful_path): 
-            cmds.append("rm -rf {}".format(stateful_path))
+            # we keep the dot directories like .creds
+            cmds.append("rm -rf {}/*".format(stateful_path))
+        else:
+            cmds.append("mkdir -p {}".format(stateful_dirname))
 
-        cmds.append("mkdir -p {}".format(stateful_dirname))
         cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,stateful_path))
 
         for cmd in cmds:
