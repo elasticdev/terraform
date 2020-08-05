@@ -281,6 +281,11 @@ class Main(ResourceCmdHelper):
 
     def _create_env_file(self,method):
 
+        try:
+            tf_keys = [ tf_key for tf_key in os.environ.keys() if "TF_VAR" in tf_key ]
+        except:
+            tf_keys = None
+
         docker_env_fields = os.environ.get("DOCKER_ENV_FIELDS")
         file_path = self._get_env_filepath()
 
@@ -289,14 +294,18 @@ class Main(ResourceCmdHelper):
         f = open(file_path,"w")
         f.write("{}={}".format("METHOD",method))
 
-        if not docker_env_fields: 
-            f.close()
-            return file_path
+        if tf_keys:
+            for tf_key in tf_keys:
+                tf_value = os.environ.get(tf_key)
+                if not tf_key: continue
+                f.write("\n")
+                f.write("{}={}".format(tf_key,tf_value))
 
-        for docker_env_field in docker_env_fields.split(","):
-            if not os.environ.get(docker_env_field.strip().upper()): continue
-            f.write("\n")
-            f.write("{}={}".format(docker_env_field.strip().upper(),os.environ[docker_env_field.strip().upper()]))
+        if docker_env_fields: 
+            for docker_env_field in docker_env_fields.split(","):
+                if not os.environ.get(docker_env_field.strip().upper()): continue
+                f.write("\n")
+                f.write("{}={}".format(docker_env_field.strip().upper(),os.environ[docker_env_field.strip().upper()]))
 
         f.close()
 
