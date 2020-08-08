@@ -532,7 +532,7 @@ if __name__ == '__main__':
 
     if method == "create":
 
-        main.check_required_inputargs(keys=["resource_type","os_template_vars"])
+        main.check_required_inputargs(keys=["os_template_vars"])
         main.create()
 
     elif method == "destroy":
