@@ -86,7 +86,7 @@ class Main(ResourceCmdHelper):
         # The state_id is typically automated and provided by the stack calling this script.
         # The state_id will reference this specific terraform automation for modification
         # and destroying
-        self.stateful_id = get_tf_env_var("STATEFUL_ID")
+        self.stateful_id = get_tf_env_var("STATEFUL_ID",must_exists=True)
 
         # stateful_dir
         self.stateful_dir = get_tf_env_var("STATEFUL_DIR")
