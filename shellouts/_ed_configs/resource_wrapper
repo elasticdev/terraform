@@ -93,6 +93,11 @@ class Main(ResourceCmdHelper):
 
         # run_share_dir
         if self.stateful_id:
+            self.logger.debug("a"*32)
+            self.logger.debug(self.share_dir)
+            self.logger.debug("b"*32)
+            self.logger.debug(self.stateful_id)
+            self.logger.debug("c"*32)
             self.run_share_dir = os.path.join(self.share_dir,self.stateful_id)
         else:
             self.run_share_dir = self.share_dir
