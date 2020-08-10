@@ -44,6 +44,8 @@ def get_tf_env_var(variable,default=None,must_exists=None):
     _value = os.environ.get("TF_VAR_{}".format(variable.upper()))
     if _value: return _value
 
+    if default: return default
+
     if not must_exists: return
     raise MissingEnvironmentVariable("{} does not exist".format(variable))
 
