@@ -26,6 +26,27 @@ from ed_helper_publisher.loggerly import ElasticDevLogger
 from ed_helper_publisher.resource_manage import ResourceCmdHelper
 from ed_helper_publisher.output import convert_ed_output_to_values
 
+class MissingEnvironmentVariable(Exception):
+    pass
+
+# dup dhdskyeucnfhrt2634521 
+def get_tf_env_var(variable,default=None,must_exists=None):
+
+    _value = os.environ.get(variable)
+    if _value: return _value
+
+    _value = os.environ.get("TF_VAR_{}".format(variable))
+    if _value: return _value
+
+    _value = os.environ.get("TF_VAR_{}".format(variable.lower()))
+    if _value: return _value
+
+    _value = os.environ.get("TF_VAR_{}".format(variable.upper()))
+    if _value: return _value
+
+    if not must_exists: return
+    raise MissingEnvironmentVariable("{} does not exist".format(variable))
+
 class Main(ResourceCmdHelper):
 
     def __init__(self,**kwargs):
@@ -37,6 +58,7 @@ class Main(ResourceCmdHelper):
 
         # The working directory that terraform files will be copied to
         self.working_subdir = os.environ.get("TERRAFORM_DIR")
+        if not self.working_subdir: self.working_subdir = os.environ.get("TF_VAR_TERRAFORM_DIR")
         if not self.working_subdir: self.working_subdir = os.environ.get("WORKING_SUBDIR","var/tmp/terraform")
 
         # The postscript file that will be execute after terraform execution is completed.
@@ -50,24 +72,24 @@ class Main(ResourceCmdHelper):
         self.shelloutconfig = "elasticdev:::terraform::resource_wrapper"
 
         # The docker image to execute terraform files
-        self.docker_image = os.environ.get("DOCKER_EXEC_ENV","elasticdev/terraform-run-env")
+        self.docker_image = get_tf_env_var("DOCKER_EXEC_ENV",default="elasticdev/terraform-run-env")
 
         # By default, we USE_DOCKER to execute the terraform files.  If disabled, the 
         # terrform files will be executed directly by the worker which has a specific 
         # versiion of terraform installed.
-        self.use_docker = os.environ.get("USE_DOCKER")
+        self.use_docker = get_tf_env_var("USE_DOCKER")
 
         # The shared directory is the location in the worker that is temporarily shared with the 
         # Docker execution container.  This is only used if USE_DOCKER is True.
-        self.share_dir = os.environ.get("SHARE_DIR","/var/tmp/share")
+        self.share_dir = get_tf_env_var("SHARE_DIR",default="/var/tmp/share")
 
         # The state_id is typically automated and provided by the stack calling this script.
         # The state_id will reference this specific terraform automation for modification
         # and destroying
-        self.stateful_id = os.environ.get("STATEFUL_ID")
+        self.stateful_id = get_tf_env_var("STATEFUL_ID")
 
         # stateful_dir
-        self.stateful_dir = os.environ.get("STATEFUL_DIR")
+        self.stateful_dir = get_tf_env_var("STATEFUL_DIR")
 
         # run_share_dir
         if self.stateful_id:
@@ -84,7 +106,7 @@ class Main(ResourceCmdHelper):
         # The names of the terraform files that are templated and need to be 
         # rendered.  This is typically variables with a "ja2" suffix for
         # jinja2 which is used for templating and rendering
-        self.terraform_template_files = os.environ.get("TERRAFORM_TEMPLATE_FILES")
+        self.terraform_template_files = get_tf_env_var("TERRAFORM_TEMPLATE_FILES")
 
         if not self.terraform_template_files:
             self.terraform_template_files = [ "variables" ]
@@ -93,10 +115,11 @@ class Main(ResourceCmdHelper):
 
         try:
             self.destroy_env_vars = eval(os.environ.get("DESTROY_ENV_VARS"))
+            #self.destroy_env_vars = eval(get_tf_env_var("DESTROY_ENV_VARS")
         except:
             self.destroy_env_vars = None
 
-        self.destroy_execgroup = os.environ.get("DESTROY_EXECGROUP")
+        self.destroy_execgroup = get_tf_env_var("DESTROY_EXECGROUP")
 
         self.run_dir = os.getcwd()
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
@@ -125,7 +148,7 @@ class Main(ResourceCmdHelper):
 
             templateVars = {}
 
-            for _var in os.environ["OS_TEMPLATE_VARS"].split(","):
+            for _var in get_tf_env_var("OS_TEMPLATE_VARS").split(","):
                 var = _var.strip().upper()
                 if not os.environ.get(var): continue
                 # For Terraform, you need to use double quotes instead of second quotes
@@ -156,7 +179,7 @@ class Main(ResourceCmdHelper):
 
     def _add_tags(self,resource):
 
-        tags = os.environ.get("RESOURCE_TAGS")
+        tags = get_tf_env_var("RESOURCE_TAGS")
         if not tags: return
 
         tags = [ tag.strip() for tag in tags.split(",") ]
@@ -274,7 +297,7 @@ class Main(ResourceCmdHelper):
 
     def _get_env_filepath(self):
 
-        docker_env_file = os.environ.get("DOCKER_ENV_FILE",".env")
+        docker_env_file = get_tf_env_var("DOCKER_ENV_FILE",default=".env")
         file_path = os.path.join(os.getcwd(),docker_env_file)
 
         return file_path
@@ -286,7 +309,7 @@ class Main(ResourceCmdHelper):
         except:
             tf_keys = None
 
-        docker_env_fields = os.environ.get("DOCKER_ENV_FIELDS")
+        docker_env_fields = get_tf_env_var("DOCKER_ENV_FIELDS")
         file_path = self._get_env_filepath()
 
         self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
