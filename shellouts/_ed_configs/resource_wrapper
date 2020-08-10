@@ -80,7 +80,7 @@ class Main(ResourceCmdHelper):
 
         # The shared directory is the location in the worker that is temporarily shared with the 
         # Docker execution container.  This is only used if USE_DOCKER is True.
-        self.share_dir = get_tf_env_var("SHARE_DIR",must_exists=True)
+        self.share_dir = get_tf_env_var("SHARE_DIR",default="/var/tmp/share")
 
         # The state_id is typically automated and provided by the stack calling this script.
         # The state_id will reference this specific terraform automation for modification
