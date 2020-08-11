@@ -406,6 +406,8 @@ class Main(ResourceCmdHelper):
         cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
         self.execute(cmd,output_to_json=False,exit_error=True)
 
+        return results
+
         # clean up credentials directories
         #cmd = "rm -rf {}/.creds".format(self.terraform_dir)
         #self.execute(cmd,output_to_json=False,exit_error=False)
@@ -459,7 +461,9 @@ class Main(ResourceCmdHelper):
             self._exec_local_create()
         else:
             results = self._exec_docker_create()
-            self.logger.debug(results.get("output"))
+
+            if results.get("output"):
+                self.logger.debug(results.get("output"))
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
