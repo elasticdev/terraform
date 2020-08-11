@@ -411,7 +411,8 @@ class Main(ResourceCmdHelper):
     def _exec_docker_destroy(self):
 
         self._set_exec_docker_dir()
-        self._get_env_filepath()
+        self._create_env_file("destroy",create_env=True)
+        #self._get_env_filepath()
 
         results = self._exec_docker_run(method="destroy")
 
