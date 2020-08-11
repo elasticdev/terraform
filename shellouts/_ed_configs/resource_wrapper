@@ -399,18 +399,14 @@ class Main(ResourceCmdHelper):
 
         if results.get("status") is False: 
             results = self._exec_docker_run(method="destroy")
-            self._cleanup_docker_exec_env()
-            self.logger.error("terraform create failed! tried to revert changes")
+            #self._cleanup_docker_exec_env()
+            self.logger.error("Terraform create failed here {}! Tried to revert changes".format(self.run_share_dir))
             exit(9)
 
         cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
         self.execute(cmd,output_to_json=False,exit_error=True)
 
         return results
-
-        # clean up credentials directories
-        #cmd = "rm -rf {}/.creds".format(self.terraform_dir)
-        #self.execute(cmd,output_to_json=False,exit_error=False)
 
     def _exec_docker_destroy(self):
 
