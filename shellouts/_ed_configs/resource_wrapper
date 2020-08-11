@@ -298,12 +298,12 @@ class Main(ResourceCmdHelper):
 
     def _get_env_filepath(self):
 
-        _docker_env_file = get_tf_env_var("DOCKER_ENV_FILE",default=".env")
-        self.docker_env_file = os.path.join(os.getcwd(),_docker_env_file)
+        docker_env_file = get_tf_env_var("DOCKER_ENV_FILE",default=".env")
+        file_path = os.path.join(os.getcwd(),docker_env_file)
 
-        return self.docker_env_file
+        return file_path
 
-    def _create_env_file(self,method,create_env=True):
+    def _create_env_file(self,method):
 
         try:
             tf_keys = [ tf_key for tf_key in os.environ.keys() if "TF_VAR" in tf_key ]
@@ -311,11 +311,11 @@ class Main(ResourceCmdHelper):
             tf_keys = None
 
         docker_env_fields = get_tf_env_var("DOCKER_ENV_FIELDS")
-        self._get_env_filepath()
+        file_path = self._get_env_filepath()
 
-        self.logger.debug("Writing environment file {} with field {}".format(self.docker_env_file,docker_env_fields))
+        self.logger.debug("Writing environment file {} with field {}".format(file_path,docker_env_fields))
 
-        f = open(self.docker_env_file,"w")
+        f = open(file_path,"w")
         f.write("{}={}".format("METHOD",method))
 
         if tf_keys:
@@ -333,7 +333,7 @@ class Main(ResourceCmdHelper):
 
         f.close()
 
-        return self.docker_env_file
+        return file_path
 
     def _cleanup_docker_exec_env(self):
 
@@ -341,22 +341,27 @@ class Main(ResourceCmdHelper):
         cmd = "rm -rf {}".format(self.run_share_dir)
         self.execute(cmd,output_to_json=False,exit_error=False)
 
-    def _exec_docker_run(self,method=None):
+    def _exec_docker_run(self,method=None,create_env=None):
 
         os.chdir(self.run_share_dir)
 
-        if not os.path.exists(self.docker_env_file):
-            self.logger.error("Cannot find environmental file {}".format(self.docker_env_file))
+        if method and create_env: 
+            docker_env_file = self._create_env_file(method)
+        else:
+            docker_env_file = self._get_env_filepath()
+
+        if not os.path.exists(docker_env_file):
+            self.logger.error("Cannot find environmental file {}".format(docker_env_file))
             exit(9)
 
         if method:
             cmd = 'docker run -e METHOD="{}" --env-file {} --rm -v {}:{} {}'.format(method,
-                                                                                    self.docker_env_file,
+                                                                                    docker_env_file,
                                                                                     self.run_share_dir,
                                                                                     self.share_dir,
                                                                                     self.docker_image)
         else:
-            cmd = 'docker run --env-file {} --rm -v {}:{} {}'.format(self.docker_env_file,
+            cmd = 'docker run --env-file {} --rm -v {}:{} {}'.format(docker_env_file,
                                                                      self.run_share_dir,
                                                                      self.share_dir,
                                                                      self.docker_image)
@@ -367,13 +372,6 @@ class Main(ResourceCmdHelper):
 
         # create working docker run directory
         cmds = []
-
-        #if os.path.exists(self.run_share_dir): 
-        #    # we keep the dot directories like .creds
-        #    cmds.append("rm -rf {}/*".format(self.run_share_dir))
-        #else:
-        #    _dirname = os.path.dirname(self.run_share_dir)
-        #    cmds.append("mkdir -p {}".format(_dirname))
 
         _dirname = os.path.dirname(self.run_share_dir)
         if not os.path.exists(_dirname):
@@ -394,11 +392,10 @@ class Main(ResourceCmdHelper):
     def _exec_docker_create(self):
 
         self._set_exec_docker_dir()
-        self._create_env_file(method,create_env=True)
-        results = self._exec_docker_run(method="create")
+        results = self._exec_docker_run(method="create",create_env=True)
 
         if results.get("status") is False: 
-            results = self._exec_docker_run(method="destroy")
+            self._exec_docker_run(method="destroy",create_env=True)
             #self._cleanup_docker_exec_env()
             self.logger.error("Terraform create failed here {}! Tried to revert changes".format(self.run_share_dir))
             exit(9)
@@ -406,15 +403,22 @@ class Main(ResourceCmdHelper):
         cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
         self.execute(cmd,output_to_json=False,exit_error=True)
 
+        # clean up credentials directories
+        #cmd = "rm -rf {}/.creds".format(self.terraform_dir)
+        #self.execute(cmd,output_to_json=False,exit_error=False)
+
+        # clean up run_share_dir that was used for docker execution
+        self._cleanup_docker_exec_env()
+
         return results
 
     def _exec_docker_destroy(self):
 
         self._set_exec_docker_dir()
-        self._create_env_file("destroy",create_env=True)
-        #self._get_env_filepath()
-
         results = self._exec_docker_run(method="destroy")
+
+        # clean up run_share_dir that was used for docker execution
+        self._cleanup_docker_exec_env()
 
         return results
 
@@ -462,14 +466,10 @@ class Main(ResourceCmdHelper):
             results = self._exec_docker_create()
 
             if results.get("output"):
-                self.logger.debug(results.get("output"))
+                self.print_output(output=results["output"])
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
-
-        # clean up run_share_dir that was used for docker execution
-        self._cleanup_docker_exec_env()
-
         if not resource: exit(0)
 
         self.print_output(output=resource)
@@ -481,10 +481,9 @@ class Main(ResourceCmdHelper):
         else:
             results = self._exec_docker_destroy()
 
-        # clean up run_share_dir that was used for docker execution
-        self._cleanup_docker_exec_env()
-
         os.chdir(self.run_dir)
+        if not results.get("output"): return
+
         self.successful_output(output=results.get("output"))
 
 def usage():
