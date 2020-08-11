@@ -469,7 +469,7 @@ class Main(ResourceCmdHelper):
             self._exec_local_create()
         else:
             results = self._exec_docker_create()
-            self.print_output(**results)
+            self.logger.debug(results.get("output"))
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
