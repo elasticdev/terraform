@@ -460,8 +460,8 @@ class Main(ResourceCmdHelper):
         else:
             results = self._exec_docker_create()
 
-            if results.get("output"):
-                self.logger.debug(results.get("output"))
+            #if results.get("output"):
+            #    self.logger.debug(results.get("output"))
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
