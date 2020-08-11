@@ -417,6 +417,10 @@ class Main(ResourceCmdHelper):
         self._set_exec_docker_dir()
         results = self._exec_docker_run(method="destroy")
 
+        if results.get("status") is False: 
+            self.logger.debug("destroying resource failed here shared directory {}".format(self.run_share_dir))
+            return results
+
         # clean up run_share_dir that was used for docker execution
         self._cleanup_docker_exec_env()
 
