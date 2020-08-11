@@ -465,8 +465,10 @@ class Main(ResourceCmdHelper):
         else:
             results = self._exec_docker_create()
 
-            if results.get("output"):
+            try:
                 self.print_output(output=results["output"])
+            except:
+                self.logger.warn("Could not print output for docker execution")
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
