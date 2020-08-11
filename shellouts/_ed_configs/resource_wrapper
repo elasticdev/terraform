@@ -468,7 +468,8 @@ class Main(ResourceCmdHelper):
         if not self.inputargs.get("use_docker"): 
             self._exec_local_create()
         else:
-            self._exec_docker_create()
+            results = self._exec_docker_create()
+            self.print_output(**results)
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
