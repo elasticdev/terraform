@@ -465,28 +465,15 @@ class Main(ResourceCmdHelper):
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
 
+        if not resource: 
+            self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
+            return
+
         # print the output with _ed delimiters
-        if resource: 
-            self.print_output(output=resource)
+        self.print_output(output=resource)
 
-            # clean up run_share_dir that was used for docker execution
-            # Testingyoyo
-            #self._cleanup_docker_exec_env()
-
-        # if not resource: 
-        # Testingyoyo
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
-        self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
+        # clean up run_share_dir that was used for docker execution
+        self._cleanup_docker_exec_env()
 
     def destroy(self):
 
