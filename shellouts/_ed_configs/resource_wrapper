@@ -212,7 +212,6 @@ class Main(ResourceCmdHelper):
     def _get_resource_info(self):
 
         resource = self._get_state_info()
-
         if not resource: return 
 
         if not isinstance(resource,dict) and not isinstance(resource,list):
@@ -460,17 +459,21 @@ class Main(ResourceCmdHelper):
         else:
             results = self._exec_docker_create()
 
-            #if results.get("output"):
-            #    self.logger.debug(results.get("output"))
+            if results.get("output"):
+                self.logger.debug(results.get("output"))
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
 
+        # Testingyoyo
+        if not resource: 
+            self.logger.warn("resource info is not found in the output - check out {}".format(self.run_share_dir))
+            exit(100)
+
         # clean up run_share_dir that was used for docker execution
         self._cleanup_docker_exec_env()
 
-        if not resource: exit(0)
-
+        # print the output with _ed delimiters
         self.print_output(output=resource)
 
     def destroy(self):
