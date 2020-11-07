@@ -563,9 +563,8 @@ if __name__ == '__main__':
         exit(4)
 
     if method == "create":
-
-        main.check_required_inputargs(keys=["os_template_vars"])
         main.create()
+        #main.check_required_inputargs(keys=["os_template_vars"])
 
     elif method == "destroy":
         main.destroy()
@@ -574,4 +573,3 @@ if __name__ == '__main__':
         usage()
         print 'method "{}" not supported!'.format(method)
         exit(4)
-
