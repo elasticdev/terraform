@@ -139,17 +139,23 @@ class Main(ResourceCmdHelper):
                 self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(file_path))
                 return
 
-            if not os.path.exists(template_filepath):
-                self.logger.error("terraform variables template does not exists at {} - skipping templifying of it".format(template_filepath))
+            os_template_vars = get_tf_env_var("OS_TEMPLATE_VARS")
+            if not os_template_vars:
+                self.logger.warn("OS_TEMPLATE_VARS not set - skipping variables.tf creation".format(template_filepath))
                 os.chdir(self.run_dir)
-                exit(9)
                 return
+
+            if not os.path.exists(template_filepath):
+                self.logger.warn("terraform variables template does not exists at {} - skipping templifying of it".format(template_filepath))
+                os.chdir(self.run_dir)
+                return
+                #exit(9)
 
             self.logger.debug("creating terraform variables file {} from {}".format(file_path,template_filepath))
 
             templateVars = {}
 
-            for _var in get_tf_env_var("OS_TEMPLATE_VARS").split(","):
+            for _var in os_template_vars.split(","):
                 var = _var.strip().upper()
                 if not os.environ.get(var): continue
                 # For Terraform, you need to use double quotes instead of second quotes
