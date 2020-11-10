@@ -368,6 +368,8 @@ class Main(ResourceCmdHelper):
                                                                      self.share_dir,
                                                                      self.docker_image)
 
+        self.logger.debug(cmd)
+
         return self.execute(cmd,output_to_json=False,exit_error=False)
 
     def _set_exec_docker_dir(self):
