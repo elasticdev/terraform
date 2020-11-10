@@ -301,6 +301,8 @@ class Main(ResourceCmdHelper):
             self.logger.error("terraform create failed! tried to revert changes")
             exit(9)
 
+        return results
+
     def _get_env_filepath(self):
 
         _docker_env_file = get_tf_env_var("DOCKER_ENV_FILE",default=".env")
@@ -461,12 +463,12 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         if not self.inputargs.get("use_docker"): 
-            self._exec_local_create()
+            results = self._exec_local_create()
         else:
             results = self._exec_docker_create()
 
-            if results.get("output"):
-                self.logger.debug(results.get("output"))
+        if results.get("output"):
+            self.logger.debug(results.get("output"))
 
         os.chdir(self.run_dir)
         resource = self._get_resource_info()
@@ -487,6 +489,9 @@ class Main(ResourceCmdHelper):
             results = self._exec_local_destroy()
         else:
             results = self._exec_docker_destroy()
+
+        if results.get("output"):
+            self.logger.debug(results.get("output"))
 
         # clean up run_share_dir that was used for docker execution
         self._cleanup_docker_exec_env()
