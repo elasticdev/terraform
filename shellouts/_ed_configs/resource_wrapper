@@ -368,7 +368,15 @@ class Main(ResourceCmdHelper):
                                                                      self.share_dir,
                                                                      self.docker_image)
 
+        # Testingyoyo
+        self.logger.debug('')
+        self.logger.debug('')
+        self.logger.debug('')
         self.logger.debug(cmd)
+        self.logger.debug('')
+        self.logger.debug('')
+        self.logger.debug('')
+        exit(9)
 
         return self.execute(cmd,output_to_json=False,exit_error=False)
 
@@ -464,10 +472,10 @@ class Main(ResourceCmdHelper):
             self.logger.warn("script to parse terraform must exists here {}".format(self.postscript_path))
             exit(9)
 
-        if not self.inputargs.get("use_docker"): 
-            results = self._exec_local_create()
-        else:
+        if self.inputargs.get("use_docker"): 
             results = self._exec_docker_create()
+        else:
+            results = self._exec_local_create()
 
         if results.get("output"):
             self.logger.debug(results.get("output"))
