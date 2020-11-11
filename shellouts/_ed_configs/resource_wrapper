@@ -425,7 +425,11 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
-        self._execute(cmd,output_to_json=False,exit_error=True)
+
+        try:
+            self._execute(cmd,output_to_json=False,exit_error=True)
+        except:
+            os.system(cmd)
 
         return results
 
