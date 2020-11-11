@@ -380,7 +380,6 @@ class Main(ResourceCmdHelper):
         self.logger.debug('')
         self.logger.debug('')
         self.logger.debug('')
-        exit(9)
 
         return self._execute(cmd,output_to_json=False,exit_error=False)
 
