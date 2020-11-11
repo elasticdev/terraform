@@ -372,14 +372,7 @@ class Main(ResourceCmdHelper):
                                                                      self.share_dir,
                                                                      self.docker_image)
 
-        # Testingyoyo
-        self.logger.debug('')
-        self.logger.debug('')
-        self.logger.debug('')
         self.logger.debug(cmd)
-        self.logger.debug('')
-        self.logger.debug('')
-        self.logger.debug('')
 
         return self._execute(cmd,output_to_json=False,exit_error=False)
 
