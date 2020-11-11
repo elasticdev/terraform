@@ -426,6 +426,7 @@ class Main(ResourceCmdHelper):
 
         cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
 
+        # Testingyoyo
         self.logger.debug(cmd)
         self.logger.debug(cmd)
         self.logger.debug(cmd)
