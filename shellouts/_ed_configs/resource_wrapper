@@ -212,7 +212,8 @@ class Main(ResourceCmdHelper):
             return 
 
         os.chdir(self.terraform_dir)
-        cmd = [ "./{}".format(self.postscript) ]
+        cmd = [ script_path ]
+        #cmd = [ "./{}".format(self.postscript) ]
         output = self._execute(cmd,output_to_json=False,exit_error=True).get("output")
         values = convert_ed_output_to_values(output)
         os.chdir(self.run_dir)
