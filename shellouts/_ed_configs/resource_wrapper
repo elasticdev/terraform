@@ -220,6 +220,7 @@ class Main(ResourceCmdHelper):
             output = self._execute(cmd,output_to_json=False,exit_error=True).get("output")
         except:
             self.logger.debug("{} failed at terraform dir {}".format(script_path,self.terraform_dir))
+            exit(9)
 
         values = convert_ed_output_to_values(output)
         os.chdir(self.run_dir)
