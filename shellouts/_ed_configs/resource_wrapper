@@ -214,7 +214,13 @@ class Main(ResourceCmdHelper):
         os.chdir(self.terraform_dir)
         cmd = [ script_path ]
         #cmd = [ "./{}".format(self.postscript) ]
-        output = self._execute(cmd,output_to_json=False,exit_error=True).get("output")
+
+        # Testingyoyo
+        try:
+            output = self._execute(cmd,output_to_json=False,exit_error=True).get("output")
+        except:
+            self.logger.debug("{} failed at terraform dir {}".format(script_path,self.terraform_dir))
+
         values = convert_ed_output_to_values(output)
         os.chdir(self.run_dir)
 
