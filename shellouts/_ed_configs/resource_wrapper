@@ -127,8 +127,8 @@ class Main(ResourceCmdHelper):
         self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
 
     def _execute(self,cmd,output_to_json=False,exit_error=True,**kwargs):
-        return self.execute4(cmd,output_to_json=output_to_json,exit_error=exit_error)
-        #return self.execute(cmd,output_to_json=output_to_json,exit_error=exit_error)
+        return self.execute(cmd,output_to_json=output_to_json,exit_error=exit_error)
+        #return self.execute4(cmd,output_to_json=output_to_json,exit_error=exit_error)
 
     def _templify(self,**kwargs):
 
