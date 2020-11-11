@@ -126,6 +126,17 @@ class Main(ResourceCmdHelper):
         self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
         self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
 
+    def _execute(self,cmd,output_to_json=False,exit_error=True,**kwargs):
+
+        status = os.system(cmd)
+
+        output = "Testingyoyo"
+        status = True
+
+        return {"output":output, "status": status}
+
+        return self.execute(cmd,output_to_json=output_to_json,exit_error=exit_error)
+
     def _templify(self,**kwargs):
 
         clobber = kwargs.get("clobber")
@@ -209,7 +220,7 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         cmd = [ "./{}".format(self.postscript) ]
-        output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
+        output = self._execute(cmd,output_to_json=False,exit_error=True).get("output")
         values = convert_ed_output_to_values(output)
         os.chdir(self.run_dir)
 
@@ -290,14 +301,14 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         
-        for cmd in cmds: self.execute(cmd,output_to_json=False,exit_error=True)
+        for cmd in cmds: self._execute(cmd,output_to_json=False,exit_error=True)
 
         cmd = "terraform apply -auto-approve"
-        results = self.execute(cmd,output_to_json=False,exit_error=False)
+        results = self._execute(cmd,output_to_json=False,exit_error=False)
 
         if results.get("status") is False: 
             cmd = "terraform destroy -auto-approve"
-            self.execute(cmd,output_to_json=False,exit_error=False)
+            self._execute(cmd,output_to_json=False,exit_error=False)
             self.logger.error("terraform create failed! tried to revert changes")
             exit(9)
 
@@ -346,7 +357,7 @@ class Main(ResourceCmdHelper):
 
         os.chdir(self.terraform_dir)
         cmd = "rm -rf {}".format(self.run_share_dir)
-        self.execute(cmd,output_to_json=False,exit_error=False)
+        self._execute(cmd,output_to_json=False,exit_error=False)
 
     def _exec_docker_run(self,method=None):
 
@@ -378,7 +389,7 @@ class Main(ResourceCmdHelper):
         self.logger.debug('')
         exit(9)
 
-        return self.execute(cmd,output_to_json=False,exit_error=False)
+        return self._execute(cmd,output_to_json=False,exit_error=False)
 
     def _set_exec_docker_dir(self):
 
@@ -404,7 +415,7 @@ class Main(ResourceCmdHelper):
         cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,self.run_share_dir))
 
         for cmd in cmds:
-            self.execute(cmd,output_to_json=False,exit_error=True)
+            self._execute(cmd,output_to_json=False,exit_error=True)
 
         return True
 
@@ -421,7 +432,7 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
-        self.execute(cmd,output_to_json=False,exit_error=True)
+        self._execute(cmd,output_to_json=False,exit_error=True)
 
         return results
 
@@ -449,7 +460,7 @@ class Main(ResourceCmdHelper):
 
         for cmd in cmds:
             for retry in range(0,3):
-                results = self.execute(cmd,output_to_json=None)
+                results = self._execute(cmd,output_to_json=None)
                 if results.get("status") is True: return results
                 self.logger.debug('having trouble destroying terraform resource at "{}"'.format(exec_dir))
                 sleep(1)
