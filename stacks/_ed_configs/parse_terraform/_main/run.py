@@ -3,6 +3,7 @@ def run(stackargs):
     # instantiate authoring stack
     stack = newStack(stackargs)
 
+    stack.parse.add_required(key="src_resource_type")
     stack.parse.add_required(key="resource_type")
 
     stack.parse.add_optional(key="resource_name",default="null") # e.g. managed
@@ -21,7 +22,7 @@ def run(stackargs):
         match = stack.match
     else:
         match = {"must_exists":stack.must_exists}
-        match["resource_type"] = stack.resource_type
+        match["resource_type"] = stack.src_resource_type
         if stack.resource_name: match["name"] = stack.resource_name
         if stack.id: match["id"] = stack.id
         if stack.provider: match["provider"] = stack.provider
