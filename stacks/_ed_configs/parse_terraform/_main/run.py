@@ -94,6 +94,12 @@ def run(stackargs):
                 if not values.get("_id"): 
                     values["_id"] = values["arn"].replace(":","_").replace("/","_")
 
+                if values.get("tags"): 
+                    if isinstance(values["tags"],dict):
+                        values["tags"] = values["tags"].values()
+                    else:
+                        del values["tags"]
+
             # get hash for _id if not provided
             if not values.get("_id"): 
                 values["_id"] = stack.get_hash_object(values)
