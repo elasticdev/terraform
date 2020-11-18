@@ -45,8 +45,8 @@ def run(stackargs):
         for instance in resource["instances"]:
 
             if stack.resource_type != resource.get("type"): continue
-            if stack.mode != resource.get("mode"): continue
-            if stack.filter_names and resource.get("name") not in stack.filter_names: continue
+            #if stack.mode != resource.get("mode"): continue
+            #if stack.filter_names and resource.get("name") not in stack.filter_names: continue
 
             values = instance["attributes"]
             if stack.vpc: values["vpc"] = stack.vpc
