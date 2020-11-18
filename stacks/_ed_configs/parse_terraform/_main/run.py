@@ -24,17 +24,17 @@ def run(stackargs):
     # Initialize 
     stack.init_variables()
 
+    # reference pt
+    description = "placehold - empty"
+    cmd = 'echo "{}"'.format(description)
+
+    stack.add_external_cmd(cmd=cmd,
+                           order_type="empty_stack::shellout",
+                           human_description=description,
+                           display=False,
+                           role="external/cli/execute")
+
     stack.set_parallel()
-
-    ## reference pt
-    #description = "placehold - empty"
-    #cmd = 'echo "{}"'.format(description)
-
-    #stack.add_external_cmd(cmd=cmd,
-    #                       order_type="empty_stack::shellout",
-    #                       human_description=description,
-    #                       display=False,
-    #                       role="external/cli/execute")
 
     if stack.filter_names:
         filter_names = [ _name.strip() for _name in stack.filter_names.split(",") ]
