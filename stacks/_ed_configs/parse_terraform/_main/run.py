@@ -15,10 +15,10 @@ def run(stackargs):
     stack.parse.add_optional(key="provider",default="null") 
 
     # get inputs to insert
-    stack.parse.add_required(key="resource_type")
+    stack.parse.add_required(key="terraform_type")
 
     stack.parse.add_optional(key="filter_names",default="null")
-    stack.parse.add_optional(key="mode",default="null")
+    stack.parse.add_optional(key="terraform_mode",default="null")
 
     # Initialize 
     stack.init_variables()
@@ -44,8 +44,8 @@ def run(stackargs):
     for resource in data["resources"]:
         for instance in resource["instances"]:
 
-            if stack.resource_type != resource.get("type"): continue
-            #if stack.mode != resource.get("mode"): continue
+            if stack.terraform_type != resource.get("type"): continue
+            #if stack.terraform_mode != resource.get("mode"): continue
             #if stack.filter_names and resource.get("name") not in stack.filter_names: continue
 
             values = instance["attributes"]
