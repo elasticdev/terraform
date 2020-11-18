@@ -16,7 +16,8 @@ def run(stackargs):
 
     # get inputs to insert
     stack.parse.add_required(key="resource_type")
-    stack.parse.add_required(key="filter_names")
+
+    stack.parse.add_optional(key="filter_names",default="null")
     stack.parse.add_optional(key="mode",default="null")
 
     # Initialize 
