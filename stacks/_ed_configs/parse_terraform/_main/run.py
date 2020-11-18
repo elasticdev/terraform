@@ -16,6 +16,7 @@ def run(stackargs):
 
     # get inputs to insert
     stack.parse.add_required(key="terraform_type")
+    stack.parse.add_required(key="resource_type")
 
     stack.parse.add_optional(key="filter_names",default="null")
     stack.parse.add_optional(key="terraform_mode",default="null")
@@ -45,37 +46,59 @@ def run(stackargs):
         for instance in resource["instances"]:
 
             if stack.terraform_type != resource.get("type"): continue
-            #if stack.terraform_mode != resource.get("mode"): continue
-            #if stack.filter_names and resource.get("name") not in stack.filter_names: continue
+            if stack.terraform_mode and stack.terraform_mode != resource.get("mode"): continue
+            if stack.filter_names and resource.get("name") not in stack.filter_names: continue
 
             values = instance["attributes"]
+            values["resource_type"] = stack.resource_type
             if stack.vpc: values["vpc"] = stack.vpc
 
-            _results = { "values":values }
+            _results = {}
+
+            if not values.get("name") and resource.get("name"):
+                values["name"] = resource["name"]
 
             if stack.provider: 
-                _results["values"]["provider"] = stack.provider
+                values["provider"] = stack.provider
                 _results["provider"] = stack.provider
 
             if hasattr(stack,"cluster"): 
-                _results["values"]["cluster"] = stack.cluster
+                values["cluster"] = stack.cluster
                 _results["cluster"] = stack.cluster
                 
             if hasattr(stack,"instance"): 
-                _results["values"]["instance"] = stack.instance
+                values["instance"] = stack.instance
                 _results["instance"] = stack.instance
 
             if hasattr(stack,"schedule_id"): 
-                _results["values"]["schedule_id"] = stack.schedule_id
+                values["schedule_id"] = stack.schedule_id
                 _results["schedule_id"] = stack.schedule_id
 
             if hasattr(stack,"job_instance_id"): 
-                _results["values"]["job_instance_id"] = stack.job_instance_id
+                values["job_instance_id"] = stack.job_instance_id
                 _results["job_instance_id"] = stack.job_instance_id
 
             if hasattr(stack,"run_id"): 
-                _results["values"]["run_id"] = stack.run_id
+                values["run_id"] = stack.run_id
                 _results["run_id"] = stack.run_id
+
+            if values.get("id") and not values.get("_id"):
+                values["_id"] = values["id"]
+
+            # AWS specific changes
+            if values.get("provider") in [ "aws", "ec2" ] and values.get("arn"):
+
+                if not values.get("region"): 
+                    values["region"] = values["arn"].split(":")[3]
+
+                if not values.get("_id"): 
+                    values["_id"] = values["arn"].replace(":","_").replace("/","_")
+
+            # get hash for _id if not provided
+            if not values.get("_id"): 
+                values["_id"] = stack.get_hash_object(values)
+
+            _results["values"] = values
 
             stack.add_resource(**_results)
 
