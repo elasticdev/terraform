@@ -52,6 +52,7 @@ def run(stackargs):
         if stack.vpc: match["vpc"] = stack.vpc
 
     _resource_info = list(stack.get_resource(**match))[0]
+    main_id = _resource_info.get("_id")
     data = _resource_info["raw"]["terraform"]
 
     for resource in data["resources"]:
@@ -115,6 +116,8 @@ def run(stackargs):
             # get hash for _id if not provided
             if not values.get("_id"): 
                 values["_id"] = stack.get_hash_object(values)
+           
+            if main_id: values["parent"] = main_id
 
             _results["values"] = values
 
