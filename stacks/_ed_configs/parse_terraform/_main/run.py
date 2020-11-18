@@ -3,19 +3,28 @@ def run(stackargs):
     # instantiate authoring stack
     stack = newStack(stackargs)
 
+    # query parameters
     stack.parse.add_required(key="src_resource_type")
-    stack.parse.add_required(key="resource_type")
 
-    stack.parse.add_optional(key="resource_name",default="null") # e.g. managed
     stack.parse.add_optional(key="match",default="null") 
+
+    stack.parse.add_optional(key="src_resource_name",default="null") 
     stack.parse.add_optional(key="id",default="null") 
-    stack.parse.add_optional(key="mode",default="null")
     stack.parse.add_optional(key="vpc",default="null")
     stack.parse.add_optional(key="must_exists",default=True) 
     stack.parse.add_optional(key="provider",default="null") 
 
+    # get inputs to insert
+    stack.parse.add_required(key="resource_type")
+    stack.parse.add_required(key="filter_names")
+    stack.parse.add_optional(key="mode",default="null")
+
     # Initialize 
     stack.init_variables()
+
+    if stack.filter_names:
+        filter_names = [ _name.strip() for _name in stack.filter_names.split(",") ]
+        stack.set_variable("filter_names",filter_names)
 
     # get terraform resource
     if stack.match: 
@@ -36,7 +45,7 @@ def run(stackargs):
 
             if stack.resource_type != resource.get("type"): continue
             if stack.mode != resource.get("mode"): continue
-            if stack.resource_name and stack.resource_name != resource.get("name"): continue
+            if stack.filter_names and resource.get("name") not in stack.filter_names: continue
 
             values = instance["attributes"]
             if stack.vpc: values["vpc"] = stack.vpc
