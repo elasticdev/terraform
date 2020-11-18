@@ -33,7 +33,7 @@ def run(stackargs):
     else:
         match = {"must_exists":stack.must_exists}
         match["resource_type"] = stack.src_resource_type
-        if stack.resource_name: match["name"] = stack.resource_name
+        if stack.src_resource_name: match["name"] = stack.src_resource_name
         if stack.id: match["id"] = stack.id
         if stack.provider: match["provider"] = stack.provider
         if stack.vpc: match["vpc"] = stack.vpc
