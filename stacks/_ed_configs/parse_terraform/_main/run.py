@@ -119,8 +119,11 @@ def run(stackargs):
            
             if main_id: values["parent"] = main_id
 
+            _id = values.get("id")
+            if not _id: _id = values.get("_id")
+
             _results["values"] = values
-            _results["human_description"] = "Parsing and adding resource_type {} name {}".format(values.get("resource_type"),values.get("name"))
+            _results["human_description"] = 'Adding resource_type "{}" id "{}"'.format(values.get("resource_type"),_id)
 
             stack.add_resource(**_results)
 
