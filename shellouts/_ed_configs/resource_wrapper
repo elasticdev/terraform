@@ -388,13 +388,6 @@ class Main(ResourceCmdHelper):
         # create working docker run directory
         cmds = []
 
-        #if os.path.exists(self.run_share_dir): 
-        #    # we keep the dot directories like .creds
-        #    cmds.append("rm -rf {}/*".format(self.run_share_dir))
-        #else:
-        #    _dirname = os.path.dirname(self.run_share_dir)
-        #    cmds.append("mkdir -p {}".format(_dirname))
-
         _dirname = os.path.dirname(self.run_share_dir)
         if not os.path.exists(_dirname):
             cmds.append("mkdir -p {}".format(_dirname))
@@ -494,6 +487,12 @@ class Main(ResourceCmdHelper):
         if not resource: 
             self.logger.warn("resource info is not found in the output - check out running environment {}".format(self.run_share_dir))
             return
+
+        try:
+            resource = self.convert_to_json(resource)
+            resource["source_method"] = "terraform"
+        except:
+            self.logger.warn("could not convert resource to json")
 
         # print the output with _ed delimiters
         self.print_output(output=resource)

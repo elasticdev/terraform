@@ -118,6 +118,7 @@ def run(stackargs):
                 values["_id"] = stack.get_hash_object(values)
            
             if main_id: values["parent"] = main_id
+            values["source_method"] = "parse_terraform"
 
             _id = values.get("id")
             if not _id: _id = values.get("_id")
