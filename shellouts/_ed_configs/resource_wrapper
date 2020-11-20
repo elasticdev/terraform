@@ -143,9 +143,9 @@ class Main(ResourceCmdHelper):
                 self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(file_path))
                 return
 
-            os_template_vars = get_tf_env_var("OS_TEMPLATE_VARS")
-            if not os_template_vars:
-                self.logger.warn("OS_TEMPLATE_VARS not set - skipping variables.tf creation".format(template_filepath))
+            tf_template_vars = get_tf_env_var("TF_TEMPLATE_VARS")
+            if not tf_template_vars:
+                self.logger.warn("TF_TEMPLATE_VARS not set - skipping variables.tf creation".format(template_filepath))
                 os.chdir(self.run_dir)
                 return
 
@@ -159,7 +159,7 @@ class Main(ResourceCmdHelper):
 
             templateVars = {}
 
-            for _var in os_template_vars.split(","):
+            for _var in tf_template_vars.split(","):
                 var = _var.strip().upper()
                 if not os.environ.get(var): continue
                 # For Terraform, you need to use double quotes instead of second quotes
@@ -547,7 +547,7 @@ environmental variables:
     create:
         RESOURCE_TYPE
         RESOURCE_TAGS
-        OS_TEMPLATE_VARS - environmental variables use for templating terraform files
+        TF_TEMPLATE_VARS - environmental variables use for templating terraform files
 
     destroy:
 
@@ -574,7 +574,7 @@ if __name__ == '__main__':
                          "terraform_template_files",
                          "resource_type",
                          "resource_tags",
-                         "os_template_vars" ]
+                         "tf_template_vars" ]
 
         main.set_inputargs(set_env_vars=set_env_vars)
    
@@ -586,7 +586,7 @@ if __name__ == '__main__':
 
     if method == "create":
         main.create()
-        #main.check_required_inputargs(keys=["os_template_vars"])
+        #main.check_required_inputargs(keys=["tf_template_vars"])
 
     elif method == "destroy":
         main.destroy()
