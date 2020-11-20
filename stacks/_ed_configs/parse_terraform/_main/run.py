@@ -25,7 +25,8 @@ def run(stackargs):
     stack.init_variables()
 
     # reference pt
-    description = "placehold - empty"
+    description = "Checkpoint - {}".format(stack.random_id(size=8))
+
     cmd = 'echo "{}"'.format(description)
 
     stack.add_external_cmd(cmd=cmd,
