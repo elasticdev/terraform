@@ -65,6 +65,7 @@ def run(stackargs):
 
             values = instance["attributes"]
             values["resource_type"] = stack.resource_type
+            values["query_only"] = stack.resource_type
             if stack.vpc: values["vpc"] = stack.vpc
 
             _results = {}
