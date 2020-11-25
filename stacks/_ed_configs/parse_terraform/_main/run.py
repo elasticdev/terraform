@@ -16,7 +16,7 @@ def run(stackargs):
 
     # get inputs to insert
     stack.parse.add_required(key="terraform_type")
-    stack.parse.add_required(key="resource_type")
+    stack.parse.add_required(key="dst_resource_type")
 
     stack.parse.add_optional(key="filter_names",default="null")
     stack.parse.add_optional(key="terraform_mode",default="null")
@@ -64,8 +64,8 @@ def run(stackargs):
             if stack.filter_names and resource.get("name") not in stack.filter_names: continue
 
             values = instance["attributes"]
-            values["resource_type"] = stack.resource_type
-            values["query_only"] = stack.resource_type
+            values["resource_type"] = stack.dst_resource_type
+            values["query_only"] = True
             if stack.vpc: values["vpc"] = stack.vpc
 
             _results = {}
