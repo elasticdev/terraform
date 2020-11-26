@@ -21,6 +21,9 @@ def run(stackargs):
     stack.parse.add_optional(key="filter_names",default="null")
     stack.parse.add_optional(key="terraform_mode",default="null")
 
+    stack.parse.add_optional(key="labels",default="null")
+    stack.parse.add_optional(key="tags",default="null")
+
     # Initialize 
     stack.init_variables()
 
@@ -127,6 +130,9 @@ def run(stackargs):
 
             _results["values"] = values
             _results["human_description"] = 'Adding resource_type "{}" id "{}"'.format(values.get("resource_type"),_id)
+
+            if stack.labels: _results["labels"] = stack.labels
+            if stack.tags: _results["tags"] = stack.tags
 
             stack.add_resource(**_results)
 
