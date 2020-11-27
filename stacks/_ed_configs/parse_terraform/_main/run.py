@@ -27,6 +27,11 @@ def run(stackargs):
     stack.parse.add_optional(key="labels",default="null")
     stack.parse.add_optional(key="tags",default="null")
 
+    # mapping is for additing additional fields based on another field
+    # for example, id is the same as sg_id for security group id
+    # this allows for querying or lookup on a more logical field
+    stack.parse.add_optional(key="mapping",default="null")
+
     # Initialize 
     stack.init_variables()
 
@@ -37,6 +42,14 @@ def run(stackargs):
             add_values = json.loads(stack.add_values)
         except:
             add_values = None
+
+    mapping = None
+
+    if stack.mapping:
+        try:
+            mapping = json.loads(stack.mapping)
+        except:
+            mapping = None
 
     # reference pt
     description = "Checkpoint - {}".format(stack.random_id(size=8))
@@ -81,9 +94,15 @@ def run(stackargs):
             values["resource_type"] = stack.dst_resource_type
             values["query_only"] = True
             if stack.vpc: values["vpc"] = stack.vpc
+
             if add_values:
                 for _k,_v in add_values.iteritems():
                     values[_k] = _v
+
+            if mapping:
+                for _k,_v in mapping.iteritems():
+                    if not values.get(_k): continue
+                    values[_v] = values[_k]
 
             _results = {}
 
