@@ -1,5 +1,7 @@
 def run(stackargs):
 
+    import json
+
     # instantiate authoring stack
     stack = newStack(stackargs)
 
@@ -21,11 +23,20 @@ def run(stackargs):
     stack.parse.add_optional(key="filter_names",default="null")
     stack.parse.add_optional(key="terraform_mode",default="null")
 
+    stack.parse.add_optional(key="add_values",default="null")
     stack.parse.add_optional(key="labels",default="null")
     stack.parse.add_optional(key="tags",default="null")
 
     # Initialize 
     stack.init_variables()
+
+    add_values = None
+
+    if stack.add_values:
+        try:
+            add_values = json.loads(stack.add_values)
+        except:
+            add_values = None
 
     # reference pt
     description = "Checkpoint - {}".format(stack.random_id(size=8))
@@ -70,6 +81,9 @@ def run(stackargs):
             values["resource_type"] = stack.dst_resource_type
             values["query_only"] = True
             if stack.vpc: values["vpc"] = stack.vpc
+            if add_values:
+                for _k,_v in add_values.iteritems():
+                    values[_k] = _v
 
             _results = {}
 
