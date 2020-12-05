@@ -26,80 +26,53 @@ from ed_helper_publisher.loggerly import ElasticDevLogger
 from ed_helper_publisher.resource_manage import ResourceCmdHelper
 from ed_helper_publisher.output import convert_ed_output_to_values
 
-class MissingEnvironmentVariable(Exception):
-    pass
-
-# dup dhdskyeucnfhrt2634521 
-def get_tf_env_var(variable,default=None,must_exists=None):
-
-    _value = os.environ.get(variable)
-    if _value: return _value
-
-    _value = os.environ.get("TF_VAR_{}".format(variable))
-    if _value: return _value
-
-    _value = os.environ.get("TF_VAR_{}".format(variable.lower()))
-    if _value: return _value
-
-    _value = os.environ.get("TF_VAR_{}".format(variable.upper()))
-    if _value: return _value
-
-    if default: return default
-
-    if not must_exists: return
-    raise MissingEnvironmentVariable("{} does not exist".format(variable))
+# Testingyoyo
+#class MissingEnvironmentVariable(Exception):
+#    pass
+#
+## dup dhdskyeucnfhrt2634521 
+#def get_tf_env_var(variable,default=None,must_exists=None):
+#
+#    _value = os.environ.get(variable)
+#    if _value: return _value
+#
+#    _value = os.environ.get("TF_VAR_{}".format(variable))
+#    if _value: return _value
+#
+#    _value = os.environ.get("TF_VAR_{}".format(variable.lower()))
+#    if _value: return _value
+#
+#    _value = os.environ.get("TF_VAR_{}".format(variable.upper()))
+#    if _value: return _value
+#
+#    if default: return default
+#
+#    if not must_exists: return
+#    raise MissingEnvironmentVariable("{} does not exist".format(variable))
 
 class Main(ResourceCmdHelper):
 
     def __init__(self,**kwargs):
 
-        ResourceCmdHelper.__init__(self)
+        ResourceCmdHelper.__init__(self,app_name="terraform",must_exists=["stateful_id"])
+
         self.classname = 'TerraformWrapper'
         self.logger = ElasticDevLogger(self.classname,logcategory="cloudprovider")
         self.logger.debug("Instantiating %s" % self.classname)
+        self._set_overides(**kwargs)
 
-        # The working directory that terraform files will be copied to
-        self.working_subdir = get_tf_env_var("TERRAFORM_DIR")
-        if not self.working_subdir: self.working_subdir = os.environ.get("WORKING_SUBDIR","var/tmp/terraform")
+    def _set_overides(self,**kwargs):
 
         # The postscript file that will be execute after terraform execution is completed.
         # Typically, this file reads the tfstate file, prints to the standard out to be recorded
         # and stored in the ED resource table to be used/referenced by other automation.
         self.postscript = os.environ.get("POSTSCRIPT","tfstate_to_output")
 
-        # This the default script run that will capture the terraform outputted from the 
-        # postscript file to be stored to be referenced and used.  For example, we can store
-        # the vpc id, vm/instance id, database endpoint
-        self.shelloutconfig = "elasticdev:::terraform::resource_wrapper"
-
-        # The docker image to execute terraform files
-        self.docker_image = get_tf_env_var("DOCKER_EXEC_ENV",default="elasticdev/terraform-run-env")
-
-        # By default, we USE_DOCKER to execute the terraform files.  If disabled, the 
-        # terrform files will be executed directly by the worker which has a specific 
-        # versiion of terraform installed.
-        self.use_docker = get_tf_env_var("USE_DOCKER")
-
-        # The shared directory is the location in the worker that is temporarily shared with the 
-        # Docker execution container.  This is only used if USE_DOCKER is True.
-        self.share_dir = get_tf_env_var("SHARE_DIR",default="/var/tmp/share")
-
-        # The state_id is typically automated and provided by the stack calling this script.
-        # The state_id will reference this specific terraform automation for modification
-        # and destroying
-        self.stateful_id = get_tf_env_var("STATEFUL_ID",must_exists=True)
-
         # stateful_dir
-        self.stateful_dir = get_tf_env_var("STATEFUL_DIR")
+        self.stateful_dir = self.get_env_var("STATEFUL_DIR")
 
-        # run_share_dir
-        if self.stateful_id:
-            self.run_share_dir = os.path.join(self.share_dir,self.stateful_id)
-        else:
-            self.run_share_dir = self.share_dir
-
+        # credentials directory
         if self.stateful_dir:
-            # credentials directory
             self.creds_dir = os.path.join(self.stateful_dir,".creds")
         else:
             self.creds_dir = None
@@ -107,28 +80,15 @@ class Main(ResourceCmdHelper):
         # The names of the terraform files that are templated and need to be 
         # rendered.  This is typically variables with a "ja2" suffix for
         # jinja2 which is used for templating and rendering
-        self.terraform_template_files = get_tf_env_var("TERRAFORM_TEMPLATE_FILES")
+        self.terraform_template_files = self.get_env_var("TERRAFORM_TEMPLATE_FILES")
 
         if not self.terraform_template_files:
             self.terraform_template_files = [ "variables" ]
         else:
             self.terraform_template_files = [ template_file.strip() for template_file in self.terraform_template_files.split(",") ]
 
-        try:
-            self.destroy_env_vars = eval(os.environ.get("DESTROY_ENV_VARS"))
-            #self.destroy_env_vars = eval(get_tf_env_var("DESTROY_ENV_VARS")
-        except:
-            self.destroy_env_vars = None
-
-        self.destroy_execgroup = get_tf_env_var("DESTROY_EXECGROUP")
-
-        self.run_dir = os.getcwd()
-        self.terraform_dir = os.path.join(self.run_dir,self.working_subdir)
-        self.postscript_path = os.path.join(self.terraform_dir,self.postscript)
-
-    def _execute(self,cmd,output_to_json=False,exit_error=True,**kwargs):
-        return self.execute(cmd,output_to_json=output_to_json,exit_error=exit_error)
-        #return self.execute4(cmd,output_to_json=output_to_json,exit_error=exit_error)
+        #app_dir = os.path.join(self.run_dir,self.working_subdir)
+        self.postscript_path = os.path.join(self.app_dir,self.postscript)
 
     def _templify(self,**kwargs):
 
@@ -136,14 +96,14 @@ class Main(ResourceCmdHelper):
 
         for template_file in self.terraform_template_files:
 
-            template_filepath = os.path.join(self.terraform_dir,"{}.ja2".format(template_file))
-            file_path = os.path.join(self.terraform_dir,"{}.tf".format(template_file))
+            template_filepath = os.path.join(self.app_dir,"{}.ja2".format(template_file))
+            file_path = os.path.join(self.app_dir,"{}.tf".format(template_file))
 
             if os.path.exists(file_path) and not clobber:
                 self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(file_path))
                 return
 
-            tf_template_vars = get_tf_env_var("TF_TEMPLATE_VARS")
+            tf_template_vars = self.get_env_var("TF_TEMPLATE_VARS")
             if not tf_template_vars:
                 self.logger.warn("TF_TEMPLATE_VARS not set - skipping variables.tf creation".format(template_filepath))
                 os.chdir(self.run_dir)
@@ -188,37 +148,19 @@ class Main(ResourceCmdHelper):
 
         return json.loads(results)
 
-    def _add_tags(self,resource):
-
-        tags = get_tf_env_var("RESOURCE_TAGS")
-        if not tags: return
-
-        tags = [ tag.strip() for tag in tags.split(",") ]
-        if not isinstance(resource.get("tags"),list): resource["tags"] = []
-        resource["tags"].extend(tags)
-        resource["tags"].append("terraform")
-
-        # remove duplicates
-        resource["tags"] = list(set(resource["tags"]))
- 
-        return resource
-
     def _get_state_info(self):
 
-        script_path = os.path.join(self.terraform_dir,self.postscript)
-
-        if not os.path.exists(script_path):
-            self.logger.warn("post script {} does not exists".format(script_path))
+        if not os.path.exists(self.postscript_path):
+            self.logger.warn("post script {} does not exists".format(self.postscript_path))
             return 
 
-        os.chdir(self.terraform_dir)
-        cmd = [ script_path ]
-        #cmd = [ "./{}".format(self.postscript) ]
+        os.chdir(self.app_dir)
+        cmd = [ self.postscript_path ]
 
         try:
-            output = self._execute(cmd,output_to_json=False,exit_error=True).get("output")
+            output = self.execute(cmd,output_to_json=False,exit_error=True).get("output")
         except:
-            self.logger.debug("{} failed at terraform dir {}".format(script_path,self.terraform_dir))
+            self.logger.debug("{} failed at terraform dir {}".format(self.postscript_path,self.app_dir))
             exit(9)
 
         values = convert_ed_output_to_values(output)
@@ -236,12 +178,12 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         if isinstance(resource,dict): 
-            self._add_tags(resource)
+            self.add_resource_tags(resource)
             self._add_destroy_parameters(resource)
 
         if isinstance(resource,list):
             for _resource in resource:
-                self._add_tags(_resource)
+                self.add_resource_tags(_resource)
                 if not _resource.get("main"): continue
                 self._add_destroy_parameters(_resource)
 
@@ -299,16 +241,16 @@ class Main(ResourceCmdHelper):
         cmds.append("chmod -R 777 .terraform")
         cmds.append("terraform plan")
 
-        os.chdir(self.terraform_dir)
+        os.chdir(self.app_dir)
         
-        for cmd in cmds: self._execute(cmd,output_to_json=False,exit_error=True)
+        for cmd in cmds: self.execute(cmd,output_to_json=False,exit_error=True)
 
         cmd = "terraform apply -auto-approve"
-        results = self._execute(cmd,output_to_json=False,exit_error=False)
+        results = self.execute(cmd,output_to_json=False,exit_error=False)
 
         if results.get("status") is False: 
             cmd = "terraform destroy -auto-approve"
-            self._execute(cmd,output_to_json=False,exit_error=False)
+            self.execute(cmd,output_to_json=False,exit_error=False)
             self.logger.error("terraform create failed! tried to revert changes")
             exit(9)
 
@@ -316,7 +258,7 @@ class Main(ResourceCmdHelper):
 
     def _get_env_filepath(self):
 
-        _docker_env_file = get_tf_env_var("DOCKER_ENV_FILE",default=".env")
+        _docker_env_file = self.get_env_var("DOCKER_ENV_FILE",default=".env")
         self.docker_env_file = os.path.join(os.getcwd(),_docker_env_file)
 
         return self.docker_env_file
@@ -328,7 +270,7 @@ class Main(ResourceCmdHelper):
         except:
             tf_keys = None
 
-        docker_env_fields = get_tf_env_var("DOCKER_ENV_FIELDS")
+        docker_env_fields = self.get_env_var("DOCKER_ENV_FIELDS")
         self._get_env_filepath()
 
         self.logger.debug("Writing environment file {} with field {}".format(self.docker_env_file,docker_env_fields))
@@ -355,9 +297,9 @@ class Main(ResourceCmdHelper):
 
     def _cleanup_docker_exec_env(self):
 
-        os.chdir(self.terraform_dir)
+        os.chdir(self.app_dir)
         cmd = "rm -rf {}".format(self.run_share_dir)
-        self._execute(cmd,output_to_json=False,exit_error=False)
+        self.execute(cmd,output_to_json=False,exit_error=False)
 
     def _exec_docker_run(self,method=None):
 
@@ -381,7 +323,7 @@ class Main(ResourceCmdHelper):
 
         self.logger.debug(cmd)
 
-        return self._execute(cmd,output_to_json=False,exit_error=False)
+        return self.execute(cmd,output_to_json=False,exit_error=False)
 
     def _set_exec_docker_dir(self):
 
@@ -392,15 +334,15 @@ class Main(ResourceCmdHelper):
         if not os.path.exists(_dirname):
             cmds.append("mkdir -p {}".format(_dirname))
 
-        self.logger.debug("rsync -avug {}/ {}".format(self.terraform_dir,self.run_share_dir))
+        self.logger.debug("rsync -avug {}/ {}".format(self.app_dir,self.run_share_dir))
 
         if self.creds_dir and os.path.exists(self.creds_dir):
-            cmds.append("rsync -avug {} {}/".format(self.creds_dir,self.terraform_dir))
+            cmds.append("rsync -avug {} {}/".format(self.creds_dir,self.app_dir))
 
-        cmds.append("rsync -avug {}/ {}".format(self.terraform_dir,self.run_share_dir))
+        cmds.append("rsync -avug {}/ {}".format(self.app_dir,self.run_share_dir))
 
         for cmd in cmds:
-            self._execute(cmd,output_to_json=False,exit_error=True)
+            self.execute(cmd,output_to_json=False,exit_error=True)
 
         return True
 
@@ -416,11 +358,11 @@ class Main(ResourceCmdHelper):
             self.logger.error("Terraform create failed here {}! Tried to revert changes".format(self.run_share_dir))
             exit(9)
 
-        cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.terraform_dir)
+        cmd = "rsync -avug {}/ {}".format(self.run_share_dir,self.app_dir)
         self.logger.debug(cmd)
 
         try:
-            self._execute(cmd,output_to_json=False,exit_error=True)
+            self.execute(cmd,output_to_json=False,exit_error=True)
         except:
             os.system(cmd)
 
@@ -437,8 +379,8 @@ class Main(ResourceCmdHelper):
 
     def _exec_local_destroy(self):
 
-        if os.path.exists(self.terraform_dir):
-            exec_dir = self.terraform_dir
+        if os.path.exists(self.app_dir):
+            exec_dir = self.app_dir
         else:
             exec_dir = self.run_dir
 
@@ -450,7 +392,7 @@ class Main(ResourceCmdHelper):
 
         for cmd in cmds:
             for retry in range(0,3):
-                results = self._execute(cmd,output_to_json=None)
+                results = self.execute(cmd,output_to_json=None)
                 if results.get("status") is True: return results
                 self.logger.debug('having trouble destroying terraform resource at "{}"'.format(exec_dir))
                 sleep(1)
@@ -464,8 +406,8 @@ class Main(ResourceCmdHelper):
 
         self._templify(**self.inputargs)
 
-        if not os.path.exists(self.terraform_dir):
-            self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.terraform_dir))
+        if not os.path.exists(self.app_dir):
+            self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.app_dir))
             os.chdir(self.run_dir)
             exit(9)
 
