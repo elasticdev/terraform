@@ -26,30 +26,6 @@ from ed_helper_publisher.loggerly import ElasticDevLogger
 from ed_helper_publisher.resource_manage import ResourceCmdHelper
 from ed_helper_publisher.output import convert_ed_output_to_values
 
-# Testingyoyo
-#class MissingEnvironmentVariable(Exception):
-#    pass
-#
-## dup dhdskyeucnfhrt2634521 
-#def get_tf_env_var(variable,default=None,must_exists=None):
-#
-#    _value = os.environ.get(variable)
-#    if _value: return _value
-#
-#    _value = os.environ.get("TF_VAR_{}".format(variable))
-#    if _value: return _value
-#
-#    _value = os.environ.get("TF_VAR_{}".format(variable.lower()))
-#    if _value: return _value
-#
-#    _value = os.environ.get("TF_VAR_{}".format(variable.upper()))
-#    if _value: return _value
-#
-#    if default: return default
-#
-#    if not must_exists: return
-#    raise MissingEnvironmentVariable("{} does not exist".format(variable))
-
 class Main(ResourceCmdHelper):
 
     def __init__(self,**kwargs):
@@ -90,64 +66,49 @@ class Main(ResourceCmdHelper):
         #app_dir = os.path.join(self.run_dir,self.working_subdir)
         self.postscript_path = os.path.join(self.app_dir,self.postscript)
 
-    def _templify(self,**kwargs):
+    #def _templify(self,**kwargs):
 
-        clobber = kwargs.get("clobber")
+    #    clobber = kwargs.get("clobber")
 
-        for template_file in self.terraform_template_files:
+    #    for template_file in self.terraform_template_files:
 
-            template_filepath = os.path.join(self.app_dir,"{}.ja2".format(template_file))
-            file_path = os.path.join(self.app_dir,"{}.tf".format(template_file))
+    #        template_filepath = os.path.join(self.app_dir,"{}.ja2".format(template_file))
+    #        file_path = os.path.join(self.app_dir,"{}.tf".format(template_file))
 
-            if os.path.exists(file_path) and not clobber:
-                self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(file_path))
-                return
+    #        if os.path.exists(file_path) and not clobber:
+    #            self.logger.warn("terraform variables file already exists at {} - skipping templifying of it".format(file_path))
+    #            return
 
-            tf_template_vars = self.get_env_var("TF_TEMPLATE_VARS")
-            if not tf_template_vars:
-                self.logger.warn("TF_TEMPLATE_VARS not set - skipping variables.tf creation".format(template_filepath))
-                os.chdir(self.run_dir)
-                return
+    #        tf_template_vars = self.get_env_var("TF_TEMPLATE_VARS")
+    #        if not tf_template_vars:
+    #            self.logger.warn("TF_TEMPLATE_VARS not set - skipping variables.tf creation".format(template_filepath))
+    #            os.chdir(self.run_dir)
+    #            return
 
-            if not os.path.exists(template_filepath):
-                self.logger.warn("terraform variables template does not exists at {} - skipping templifying of it".format(template_filepath))
-                os.chdir(self.run_dir)
-                return
-                #exit(9)
+    #        if not os.path.exists(template_filepath):
+    #            self.logger.warn("terraform variables template does not exists at {} - skipping templifying of it".format(template_filepath))
+    #            os.chdir(self.run_dir)
+    #            return
+    #            #exit(9)
 
-            self.logger.debug("creating terraform variables file {} from {}".format(file_path,template_filepath))
+    #        self.logger.debug("creating terraform variables file {} from {}".format(file_path,template_filepath))
 
-            templateVars = {}
+    #        templateVars = {}
 
-            for _var in tf_template_vars.split(","):
-                var = _var.strip().upper()
-                if not os.environ.get(var): continue
-                # For Terraform, you need to use double quotes instead of second quotes
-                templateVars[var] = os.environ[var].replace("'",'"')
+    #        for _var in tf_template_vars.split(","):
+    #            var = _var.strip().upper()
+    #            if not os.environ.get(var): continue
+    #            # For Terraform, you need to use double quotes instead of second quotes
+    #            templateVars[var] = os.environ[var].replace("'",'"')
 
-            templateLoader = jinja2.FileSystemLoader(searchpath="/")
-            templateEnv = jinja2.Environment(loader=templateLoader)
-            template = templateEnv.get_template(template_filepath)
-            outputText = template.render( templateVars )
-            writefile = open(file_path,"wb")
-            writefile.write(outputText)
-            writefile.close()
+    #        templateLoader = jinja2.FileSystemLoader(searchpath="/")
+    #        templateEnv = jinja2.Environment(loader=templateLoader)
+    #        template = templateEnv.get_template(template_filepath)
+    #        outputText = template.render( templateVars )
+    #        writefile = open(file_path,"wb")
+    #        writefile.write(outputText)
+    #        writefile.close()
    
-    def _format_output(self,**kwargs):
-
-        results = []
-
-        output = kwargs["output"]
-        output_to_json= kwargs.get("output_to_json")
-
-        for _output in output:
-            if not _output.strip(): continue
-            results.append(_output)
-
-        if not output_to_json: return results
-
-        return json.loads(results)
-
     def _get_state_info(self):
 
         if not os.path.exists(self.postscript_path):
@@ -404,7 +365,8 @@ class Main(ResourceCmdHelper):
         if self.use_docker and not self.stateful_id:
             self.logger.error("STATEFUL_ID needs to be set for using of docker run environments")
 
-        self._templify(**self.inputargs)
+        #self._templify(**self.inputargs)
+        self.templify(app_template_vars="TF_TEMPLATE_VARS",**self.inputargs)
 
         if not os.path.exists(self.app_dir):
             self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.app_dir))
