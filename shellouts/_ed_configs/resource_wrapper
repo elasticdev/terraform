@@ -63,8 +63,8 @@ class Main(ResourceCmdHelper):
         else:
             self.terraform_template_files = [ template_file.strip() for template_file in self.terraform_template_files.split(",") ]
 
-        #app_dir = os.path.join(self.run_dir,self.working_subdir)
         self.postscript_path = os.path.join(self.app_dir,self.postscript)
+        #app_dir = os.path.join(self.run_dir,self.working_subdir)
 
     #def _templify(self,**kwargs):
 
