@@ -328,7 +328,7 @@ class Main(ResourceCmdHelper):
 
         if not os.path.exists(self.exec_dir):
             self.logger.warn("terraform directory must exists at {} - something went wrong".format(self.exec_dir))
-            os.chdir(self.current_dir)
+            os.chdir(self.cwd)
             exit(9)
 
         if not os.path.exists(self.postscript_path):
@@ -343,7 +343,7 @@ class Main(ResourceCmdHelper):
         if results.get("output"):
             self.logger.debug(results.get("output"))
 
-        os.chdir(self.current_dir)
+        os.chdir(self.cwd)
         resource = self._get_resource_info()
 
         if not resource: 
@@ -375,7 +375,7 @@ class Main(ResourceCmdHelper):
         # clean up run_share_dir that was used for docker execution
         self._cleanup_docker_exec_env()
 
-        os.chdir(self.current_dir)
+        os.chdir(self.cwd)
         self.successful_output(output=results.get("output"))
 
 def usage():
