@@ -321,7 +321,7 @@ class Main(ResourceCmdHelper):
             self.logger.debug("z"*32)
             for retry in range(0,3):
                 results = self.execute(cmd,output_to_json=None)
-                if results.get("status") is True: return results
+                if results.get("status") is True: break
                 self.logger.debug('having trouble destroying terraform resource at "{}"'.format(exec_dir))
                 sleep(1)
 
