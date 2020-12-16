@@ -366,7 +366,7 @@ class Main(ResourceCmdHelper):
         self.print_output(output=resource)
 
         # clean up run_share_dir that was used for docker execution
-        self._cleanup_docker_exec_env()
+        #self._cleanup_docker_exec_env()
 
     def destroy(self):
 
@@ -379,7 +379,7 @@ class Main(ResourceCmdHelper):
             self.logger.debug(results.get("output"))
 
         # clean up run_share_dir that was used for docker execution
-        self._cleanup_docker_exec_env()
+        #self._cleanup_docker_exec_env()
 
         try:
             os.chdir(self.cwd)
