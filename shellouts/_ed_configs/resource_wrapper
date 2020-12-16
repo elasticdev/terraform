@@ -64,7 +64,6 @@ class Main(ResourceCmdHelper):
             self.terraform_template_files = [ template_file.strip() for template_file in self.terraform_template_files.split(",") ]
 
         self.postscript_path = os.path.join(self.exec_dir,self.postscript)
-        #exec_dir = os.path.join(self.exec_base_dir,self.app_dir)
 
     def _get_state_info(self):
 
@@ -375,7 +374,11 @@ class Main(ResourceCmdHelper):
         # clean up run_share_dir that was used for docker execution
         self._cleanup_docker_exec_env()
 
-        os.chdir(self.cwd)
+        try:
+            os.chdir(self.cwd)
+        except:
+            os.chdir("/tmp")
+
         self.successful_output(output=results.get("output"))
 
 def usage():
