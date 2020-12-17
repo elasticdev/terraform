@@ -136,6 +136,13 @@ class Main(ResourceCmdHelper):
             resource["app_dir"] = self.app_dir
             resource["method"] = "terraform"
 
+        aws_default_region = self.inputargs.get("aws_default_region")
+        if not aws_default_region: aws_default_region = os.environ.get("TF_VAR_aws_default_region")
+        if not aws_default_region: aws_default_region = os.environ.get("TF_VAR_region")
+        if not aws_default_region: aws_default_region = os.environ.get("TF_VAR_default_region")
+        if aws_default_region:
+            ["env_vars"]["AWS_DEFAULT_REGION"] = aws_default_region
+
         resource["destroy"]["env_vars"] = json.dumps(env_vars)
         if env_vars.get("STATEFUL_ID"): resource["destroy"]["stateful_id"] = env_vars["STATEFUL_ID"]
 
@@ -143,6 +150,7 @@ class Main(ResourceCmdHelper):
 
         # by default, we include default AWS credentials to be inserted during the destroy.  
         # we can also modify this script, upload, and version it to include things like GCP and Azure credentials.
+        # Testingyoyo
         resource["destroy"]["insert_env_vars"] = json.dumps(["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"])
 
         return resource
@@ -439,6 +447,7 @@ if __name__ == '__main__':
                          "working_dir",
                          "terraform_dir",
                          "terraform_template_files",
+                         "aws_default_region",
                          "resource_type",
                          "resource_tags",
                          "tf_template_vars" ]
