@@ -267,6 +267,7 @@ class Main(ResourceCmdHelper):
             exit(9)
 
         if self.inputargs.get("use_docker",True): 
+            self.logger.debug("Using docker for executing Terraform")
             results = self._exec_docker_create()
         else:
             results = self._exec_local_create()
@@ -292,10 +293,11 @@ class Main(ResourceCmdHelper):
 
     def destroy(self):
 
-        if not self.inputargs.get("use_docker"): 
-            results = self._exec_local_destroy()
-        else:
+        if self.inputargs.get("use_docker"): 
+            self.logger.debug("Using docker for executing Terraform")
             results = self._exec_docker_destroy()
+        else:
+            results = self._exec_local_destroy()
 
         if results.get("output"):
             self.logger.debug(results.get("output"))
